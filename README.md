@@ -1,6 +1,21 @@
 # twAwler
 A lightweight twitter crawler
 
+This crawler can use a single machine and discover a language-based
+community.  This criterion is programmable, so it should be able to
+discover and track any community recognized by a programmable filter.
+
+For guidelines on how to extend it with new non-language based filters
+contact the author.
+
+The crawler uses the Twitter API exclusively and does not scrape
+information.  As such, all datasets generated comply with the Twitter
+ToS.
+
+Dynamic compliance may take some manual curation: if for example an
+installation needs to purge deleted tweets or users every so often,
+this is currently not automated, but there are tools to help.
+
 ## Social Network Analytics for Twitter
 
 This repository includes tools for twitter crawling and analytics
