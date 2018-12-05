@@ -1,0 +1,13 @@
+#--------------------------------------------------------------------------------
+# These tokens are needed for user authentication.
+# Credentials can be generates via Twitter's Application Management:
+#	https://apps.twitter.com/app/new
+#--------------------------------------------------------------------------------
+
+consumer_key = "get"
+consumer_secret = "these"
+access_token= "keys"
+access_token_secret = "from twitter"
+
+lang='el'
+mongo='twitterdatabase'
