@@ -76,8 +76,7 @@ bin/dumpall.py <twitteruser>
 ```
 
 
-To seed the network with users to be followed, use `stream.py`, or the
-`scripts/seed-stopwords.sh` script.
+To seed the network with users to be followed, use `stream.py`.
 
 After adding a few users, run
 
