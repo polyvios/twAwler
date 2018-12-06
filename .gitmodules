@@ -1,0 +1,3 @@
+[submodule "greekdict"]
+	path = greekdict
+	url = git@github.com:polyvios/el-wiktionary-parser.git
