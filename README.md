@@ -50,7 +50,14 @@ To set up a twAwler installation, clone the repository, set up
 `$CRALWERDIR` shell environment variable, and add the root dir of the
 project to your `$PYTHONPATH`.  You can do that once in file
 [env.sh](env.sh) and then source the file whenever you use the
-crawler.
+crawler.  Then run `scripts/install.sh` to create empty directories
+for crawler data and avatar images.
+
+You also need to populate the submodule repositories, and install
+`greekdict`.  To train the greek POS tagger, you need a recent XML
+dump of the el.wiktionary.org dictionary.  Follow the instructions in
+its README file to train it, and place the resulting `word_graph.json`
+file in directory `data/` created by the installation script.
 
 Then, create a `config.py` file with the oauth keys for a twitter application.
 To get twitter keys, you have to apply for a developer account at
