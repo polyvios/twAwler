@@ -1,0 +1,30 @@
+# Packages:
+# =========
+python-pip
+psmisc
+mongodb
+wget
+tmux
+xorg-x11-server-Xvfb
+firefox
+xclip
+
+# Pip install:
+# ============
+pymongo
+sklearn
+unicodecsv
+numpy
+scipy
+nltk
+ipython[notebook]
+xmltodict
+emoji
+progress
+matplotlib
+bs4 lxml
+python-twitter
+tweepy
+selenium
+pyvirtualdisplay
+
