@@ -5,9 +5,6 @@ psmisc
 mongodb
 wget
 tmux
-xorg-x11-server-Xvfb
-firefox
-xclip
 
 # Pip install:
 # ============
@@ -17,14 +14,13 @@ unicodecsv
 numpy
 scipy
 nltk
-ipython[notebook]
+ipython
 xmltodict
 emoji
 progress
 matplotlib
-bs4 lxml
+bs4
+lxml
 python-twitter
 tweepy
-selenium
-pyvirtualdisplay
 
