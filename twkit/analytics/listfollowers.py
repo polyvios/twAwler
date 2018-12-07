@@ -78,6 +78,7 @@ def save_csv(db, userids, filename):
       fieldnames=fieldnames,
       restval='',
       encoding='utf-8',
+      extrasaction='ignore',
       quoting=unicodecsv.QUOTE_MINIMAL)
       
     vectorwriter.writeheader()

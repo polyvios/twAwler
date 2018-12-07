@@ -45,7 +45,7 @@ def add100_id(db, api, idlist):
     if verbose():
       print 'error, retrying one-by-one'
     map(lambda i: get_if_missing(db, api, i), idlist)
-    return
+    return []
   for u in users:
     #u1 = user._json
     #u = twitter.User.NewFromJsonDict(u1)
