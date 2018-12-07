@@ -5,7 +5,9 @@
 # polyvios@ics.forth.gr
 ###########################################
 
-# crawl all followers of the given user(s), insert into db
+"""
+crawl all followers of the given user(s), insert into db
+"""
 
 import sys
 import twitter
