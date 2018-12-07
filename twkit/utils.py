@@ -21,13 +21,13 @@ import atexit
 import pprint
 import config
 
-class MyPrettyPrinter(pprint.PrettyPrinter):
+class _MyPrettyPrinter(pprint.PrettyPrinter):
   def format(self, object, context, maxlevels, level):
     if isinstance(object, unicode):
       return (object.encode('utf8'), True, False)
     return pprint.PrettyPrinter.format(self, object, context, maxlevels, level)
 
-gprint = MyPrettyPrinter(width=500).pprint
+gprint = _MyPrettyPrinter(width=500).pprint
 cache = None
 verbose_state = False
 
@@ -106,13 +106,25 @@ def init_state(use_cache=False, ignore_api=False):
       'gr': greek }
   return db, api
 
-def id_to_userstr(db, i):
-  u = get_tracked(db, uid=i)
+def id_to_userstr(db, uid):
+  """
+  Translate a user id :uid: to the corresponding lowercase screen name
+  if it exists and is current, otherwise the last known screen name,
+  otherwise a string of the form "unknown(id)"
+  """
+  u = get_tracked(db, uid=uid)
   if u is None:
-    u = lookup_user(db, i)
-  return u['screen_name_lower'] if u and 'screen_name_lower' in u else u['screen_name'] if u and 'screen_name' in u else 'unknownid({})'.format(i)
+    u = lookup_user(db, uid)
+  return u['screen_name_lower'] if u and 'screen_name_lower' in u else u['screen_name'] if u and 'screen_name' in u else 'unknownid({})'.format(uid)
 
 def pack_tweet(db, s):
+  """
+  Function that gets a string representation of a tweet :s:, or a
+  dictionary, or a json object, and packs it into the representation
+  used by our mongo tweets collection.  If the tweet contains URLs,
+  they will be inserted into the shorturl collection. Datetimes are
+  all UTC-tz-converted into mongo dates.
+  """
   j = json.loads(unicode(s))
   if j.get('urls'):
     for url in j['urls']:
@@ -147,6 +159,11 @@ def pack_tweet(db, s):
   return j
 
 def get_followers(db, uid, timestamp=None):
+  """
+  Returns an iterable containing all follower ids for the user with
+  the given uid.  If :timestamp: is used, it's a dictiorary containing
+  criteria on the "date" field.
+  """
   criteria = { 'follows': uid }
   if timestamp: criteria['date'] = timestamp
   followers = db.follow.aggregate(
@@ -254,6 +271,13 @@ def protected(db, uid):
 
 
 def is_protected(db, uid):
+  """
+  Returns true if the given user is protected.
+
+  Warning: this function is not pure!
+  If the protected user was seen to be protected more than 30 days
+  ago, they will be marked for re-checking at the first chance.
+  """
   global cache
   if cache: return uid in cache['prot']
   x = db.protected.find_one({'id': uid})
@@ -268,6 +292,11 @@ def is_protected(db, uid):
 
 
 def ignore_user(db, uid):
+  """
+  Mark a given user as ignored.
+
+  :uid:  User ID of the user to be marked.
+  """
   if is_dead(db, uid):
     print u'user dead, skip', uid
     return

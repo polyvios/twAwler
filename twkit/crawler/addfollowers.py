@@ -16,6 +16,11 @@ from datetime import datetime, timedelta
 from twkit.utils import *
 
 def addfollowers(db, api, uid, force=False):
+  """
+  Crawl followers using the followers/list api endpoint and populate
+  the follow colloection.  Since this endpoint returns user
+  objects, we also add them into the database users collection.
+  """
   last = db.lastscan.find_one({'id': uid, 'action': 'followers'})
   now = datetime.utcnow()
   if not force and last != None and last['date'] + timedelta(days=100) > now:
@@ -47,6 +52,11 @@ def addfollowers(db, api, uid, force=False):
 
 
 def addfollowerids(db, api, uid, wait=False, addusers=False):
+  """
+  Crawls the followers/ids endpoint and updates the follow collection.
+  Does not get user objects. If you want user objects after the follow
+  relation is somewhat populated use the fillfollow.py module.
+  """
   last = db.lastscan.find_one({'id': uid, 'action': 'followers'})
   now = datetime.utcnow()
   if last != None and last['date'] + timedelta(days=100) > now:
