@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2017 Polyvios Pratikakis
+# (c) 2016-2018 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
 """
-crawl all followers of the given user(s), insert into db
+Crawl all followers of the given user(s) and insert them into the
+follow relation.  Depending on the crawled endpoint, this may also
+populate the 'users' collection with user information.
 """
 
 import sys
@@ -84,7 +86,7 @@ def addfollowerids(db, api, uid, wait=False, addusers=False):
 
 
 if __name__ == '__main__':
-  parser = optparse.OptionParser()
+  parser = optparse.OptionParser(usage=u'Usage: %prog [options] <user> [<user> ...]')
   parser.add_option("-a", "--addusers", action="store_true", dest="addusers", default=False, help="Add all followers to tracked users")
   parser.add_option("--all", action="store_true", dest="all", default=False, help="Scan all tracked users")
   parser.add_option("--id", action="store_true", dest="ids", default=False, help="Arguments are user id not user names")
@@ -92,8 +94,8 @@ if __name__ == '__main__':
   parser.add_option("-f", "--force", action="store_true", dest="force", default=False, help="Do not check for staleness")
   parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="Make noise")
   (options, args) = parser.parse_args()
-  verbose(options.verbose)
 
+  verbose(options.verbose)
   db, api = init_state()
 
   if options.all:
@@ -101,6 +103,7 @@ if __name__ == '__main__':
     userlist = [x['id'] for x in db.following.find().sort('id', 1 if options.full else -1)]
   else:
     userlist = [x.lower().replace("@", "") for x in args]
+
   for user in userlist:
     uname = None if options.ids else user
     uid = long(user) if options.ids else None

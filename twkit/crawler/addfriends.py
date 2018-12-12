@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2017 Polyvios Pratikakis
+# (c) 2016-2018 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
-# crawl all users that follow the given user(s), add to db
+"""
+Crawl all users that follow the given user(s), add them to the follow
+relation.  Depending on the crawled endpoint, this may also populate
+the 'users' collection with user information.
+"""
 
 import sys
 import twitter

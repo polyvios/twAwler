@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2017 Polyvios Pratikakis
+# (c) 2016-2018 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
-'''
+"""
 Scan a given user's last 200 favorite tweets and add all their authors
 to be crawled.
-'''
+"""
 
 import sys
 import optparse

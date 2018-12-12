@@ -6,8 +6,8 @@
 ###########################################
 
 """
-fetch from tw and add the user information to db (by user id),
-without following the user
+Fetch from twitter and add the user information to the 'users'
+collection without following the user.
 """
 
 import twitter

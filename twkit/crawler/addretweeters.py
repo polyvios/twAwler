@@ -5,6 +5,11 @@
 # polyvios@ics.forth.gr
 ###########################################
 
+"""
+Crawl twitter for retweeters of a given tweet id and add them to the
+tracked users.
+"""
+
 import sys
 import twitter
 import optparse
@@ -28,14 +33,16 @@ def addretweeters(db, api, twid):
     follow_user(db, api, userid, wait=True, refollow=options.refollow)
 
 if __name__ == '__main__':
-  parser = optparse.OptionParser()
+  parser = optparse.OptionParser(usage=u'Usage: %prog [options] <tweet> [<tweet> ...]')
   parser.add_option('--refollow', action='store_true', dest='refollow', default=False, help='Re-follow ignored users')
   parser.add_option('-v', '--verbose', action='store_true', dest='verbose', default=False, help='Make noise')
   parser.add_option('-u', '--userscan', action='store_true', dest='userscan', default=False, help='Scan all user tweets')
-  parser.add_option("--id", action="store_true", dest="ids", default=False, help="Input is user ids.")
+  parser.add_option("--id", action="store_true", dest="ids", default=False, help="Input is user ids, not tweet ids.")
   (options, args) = parser.parse_args()
+
   verbose(options.verbose)
   db, api = init_state()
+
   if options.userscan:
     for user in args:
       uid = long(user) if options.ids else None

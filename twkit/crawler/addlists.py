@@ -160,8 +160,7 @@ def addlists(db, api, uid, wait, force):
     upsert=True)
 
 if __name__ == '__main__':
-  parser = optparse.OptionParser()
-  #parser.add_option("-a", "--addusers", action="store_true", dest="addusers", default=False, help="Add all followers to tracked users")
+  parser = optparse.OptionParser(usage=u'Usage: %prog [options] <user> [<user> ...]')
   parser.add_option("--all", action="store_true", dest="all", default=False, help="Scan all tracked users")
   parser.add_option("--id", action="store_true", dest="ids", default=False, help="Arguments are user id not user names")
   parser.add_option("--lists", action="store_true", dest="lists", default=False, help="Get all lists of given user.")
@@ -171,8 +170,8 @@ if __name__ == '__main__':
   parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="Make noise")
   parser.add_option("-f", "--force", action="store_true", dest="force", default=False, help="Scan anyway")
   (options, args) = parser.parse_args()
-  verbose(options.verbose)
 
+  verbose(options.verbose)
   db, api = init_state()
 
   if options.lid:
@@ -186,6 +185,7 @@ if __name__ == '__main__':
     userlist = [x['id'] for x in db.following.find().sort('id', 1 if options.lists else -1)]
   else:
     userlist = [x.lower().replace("@", "") for x in args]
+
   for user in userlist:
     uname = None if options.ids else user
     uid = long(user) if options.ids else None
