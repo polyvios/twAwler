@@ -1,5 +1,5 @@
 #change the following line to crawler directory:
-export CRAWLERDIR=$HOME/work/TwitterAnalytics/
+export CRAWLERDIR=$HOME/work/github/twAwler/
 export PYTHONPATH=$PYTHONPATH:$CRAWLERDIR
 export CRAWLERBIN=$CRAWLERDIR/bin
 export DATADIR=$CRAWLERDIR/data
