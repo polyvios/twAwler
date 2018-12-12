@@ -15,7 +15,7 @@ from twkit.utils import *
 from twkit.crawler.fillfollow import add100_id
 
 if __name__ == "__main__":
-  parser = optparse.OptionParser()
+  parser = optparse.OptionParser(usage=u'Usage: %prog [options] <user> [<user> ...]')
   parser.add_option("--refollow", action="store_true", dest="refollow", default=False, help="Re-follow ignored users")
   parser.add_option("--id", action="store_true", dest="ids", default=False, help="Input is ids, not usernames")
   parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="Make noise")
@@ -28,6 +28,7 @@ if __name__ == "__main__":
   verbose(options.verbose)
   db, api = init_state(use_cache=False)
   userlist = [x.lower().replace("@", "") for x in args]
+
   if options.ids and len(args) > 100:
     idlist = []
     for idstr in args:
