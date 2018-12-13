@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 ###########################################
-# (c) 2016-2017 Polyvios Pratikakis
+# (c) 2016-2018 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
