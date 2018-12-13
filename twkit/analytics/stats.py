@@ -127,10 +127,10 @@ def get_user_mentions(db, userid, criteria):
     return Bar("Loading mentions:", max=tweets.count(), suffix = '%(index)d/%(max)d - %(eta_td)s').iter(tweets)
   return tweets
 
-"""
-  Returns tweets by other users that retweet tweets by the given user.
-"""
 def get_user_retweets(db, userid, criteria):
+  """
+  Returns tweets by other users that retweet tweets by the given user.
+  """
   if criteria:
     tweets = db.tweets.find({'retweeted_status.user.id' : userid, 'created_at': criteria})
   else:
@@ -138,6 +138,52 @@ def get_user_retweets(db, userid, criteria):
   if verbose():
     return Bar("Loading retweets:", max=tweets.count(), suffix = '%(index)d/%(max)d - %(eta_td)s').iter(tweets)
   return tweets
+
+def get_retweeters(db, uid, criteria):
+  retweeters = Counter()
+  for t in get_user_retweets(db, uid, criteria):
+    retweeters[t['user']['id']] += 1
+  return retweeters
+
+def get_retweeted(db, uid, criteria):
+  retweeted = Counter()
+  for t in get_user_tweets(db, uid, criteria):
+    if 'retweeted_status' not in t: continue
+    retweeted[t['retweeted_status']['user']['id']] += 1
+  return retweeted
+
+
+def get_user_quoted_tweets(db, userid, criteria):
+  """
+  Returns tweets by other users that quote tweets by the given user.
+  """
+  if criteria:
+    tweets = db.tweets.find({'quoted_status.user.id' : userid, 'created_at': criteria})
+  else:
+    tweets = db.tweets.find({'quoted_status.user.id' : userid})
+  if verbose():
+    return Bar("Loading quotes:", max=tweets.count(), suffix = '%(index)d/%(max)d - %(eta_td)s').iter(tweets)
+  return tweets
+
+def get_quoters(db, uid, criteria):
+  """
+  Returns users that have quoted the given user.
+  """
+  quoters = Counter()
+  for t in get_user_quoted_tweets(db, uid, criteria):
+    quoters[t['user']['id']] += 1
+  return quoters
+
+def get_quoted(db, uid, criteria):
+  """
+  Returns users quoted by the given user.
+  """
+  quoted = Counter()
+  for t in get_user_tweets(db, uid, criteria):
+    if 'quoted_status' not in t: continue
+    quoted[t['quoted_status']['user']['id']] += 1
+  return quoted
+
 
 
 def fill_lastmonth_usage(db, u):
