@@ -5,6 +5,11 @@
 # polyvios@ics.forth.gr
 ###########################################
 
+"""
+Create a file (default follow.txt) with all follow edges, encoded as
+<Src-Id Dest-Id> pairs.
+"""
+
 import sys
 import optparse
 from progress.bar import Bar
