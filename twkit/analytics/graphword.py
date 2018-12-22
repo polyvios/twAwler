@@ -68,7 +68,7 @@ if __name__ == '__main__':
     u = lookup_user(db, uname=options.user)
     tweets = get_user_tweets(db, u['id'], criteria)
   else:
-    tweets = get_all_tweets(db, criteria)
+    tweets = get_all_tweets(db, criteria, batch=100)
   for tweet in tweets:
     if 'text' not in tweet: continue
     if options.nourl and "http" in tweet['text']: continue
