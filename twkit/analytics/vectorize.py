@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2017 Polyvios Pratikakis
+# (c) 2016-2018 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
 """
-Compute all features for the given user and save the vector in the
+Computes all features for the given user and save the vector in the
 uservectors collection.
 """
 
@@ -73,11 +73,11 @@ def flatten_dict(key, value):
 
 
 if __name__ == '__main__':
-  parser = optparse.OptionParser()
+  parser = optparse.OptionParser(usage=u'Usage: %prog [options] <user> [<user> ...]')
   parser.add_option("--purge", action="store_true", dest="purge", default=False, help="Clean database")
   parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="List names of tracked users")
   parser.add_option("-f", "--force", action="store_true", dest="force", default=False, help="Re-vectorize even if cached recently")
-  parser.add_option("--all", action="store_true", dest="all", default=False, help="Re-vectorize everyone!")
+  parser.add_option("--all", action="store_true", dest="all", default=False, help="Re-vectorize all stale vectors (older than 1 month)")
   parser.add_option("--query", action="store", dest="query", default="{}", help="Select who to vectorize")
   parser.add_option("-o", "--output", action="store", dest="filename", default=None, help="Output file")
   parser.add_option("--save", action="store_true", dest="save", default=False, help="Only output file")
@@ -89,9 +89,9 @@ if __name__ == '__main__':
   parser.add_option("-e", "--entities", action="store", dest="entity_file", default='greekdata/entities.json', help="File with entities (def: greekdata/entities.json).")
   parser.add_option("--greek", action="store_true", dest="greek", default=False, help="Ignore any users not marked as greek")
   (options, args) = parser.parse_args()
-  db, api = init_state(False, False)
-
   verbose(options.verbose)
+
+  db, api = init_state(False, False)
 
   if verbose(): print u"{} start".format(datetime.utcnow())
 
