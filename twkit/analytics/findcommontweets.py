@@ -12,7 +12,8 @@ from nltk.tokenize import TweetTokenizer
 from pymongo import MongoClient
 import optparse
 import dateutil.parser
-from twkit import init_state
+from twkit import *
+import config
 
 Time_window = 600 # in seconds
 Threshold = 0.8 #80% bag-of-words jaccard similarity
@@ -66,7 +67,7 @@ def main(firstweek, lastweek):
         }}, upsert=True)
 
 if __name__ == '__main__':
-  parser = optparse.OptionParser(usage=u'Usage: %prog [options] <isoweek> [<isoweek>...]\nExample: %prog -p 4 --before 2017W07 --after 2017W02')
+  parser = optparse.OptionParser(usage=u'Usage: %prog [options]\nExample: %prog --before 2017W07 --after 2017W02')
   parser.add_option('-v', '--verbose', action='store_true', dest='verbose', default=False, help='List names of tracked users')
   parser.add_option('-b', '--before', action='store', dest='before', default='2019W02', help='End on given isoweek, inclusive.')
   parser.add_option('-a', '--after', action='store', dest='after', default='2006W09', help='Start on given isoweek.')

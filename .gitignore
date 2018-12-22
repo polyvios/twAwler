@@ -4,3 +4,5 @@ images/
 *.aux
 *.blg
 *.bbl
+*.toc
+*.out
