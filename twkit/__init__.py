@@ -21,7 +21,7 @@ Currently extracts around 2000 features per user.
 """
 
 __author__       = 'Polyvios Pratikakis'
-__email__        = 'polyviosr@ics.forth.gr'
+__email__        = 'polyvios@ics.forth.gr'
 __copyright__    = 'Copyright (c) 2016-present Polyvios Pratikakis, FORTH-ICS'
 __license__      = 'Apache License 2.0'
 __version__      = '0.0.1'
