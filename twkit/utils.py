@@ -448,6 +448,47 @@ def add_id(db, api, uid, wait=True, force=False):
   if verbose(): print u.screen_name.lower(), u'inserted'
 
 
+def user_is_missing(db, uid):
+  if is_dead(db, uid): return False
+  if is_suspended(db, uid): return False
+  u = db.users.find_one({'id': uid})
+  if u is None: return True
+  return False
+ 
+def get_if_missing(db, api, uid):
+  x = user_is_missing(db, uid)
+  if x:
+    print u'unknown {}'.format(uid),
+    add_id(db, api, uid)
+    u = lookup_user(db, uid)
+    if u is not None:
+      print u'{}'.format(u.get('screen_name_lower', 'not found'))
+
+
+def add100_id(db, api, idlist):
+  addedlist = []
+  if verbose(): print 'another {}'.format(len(idlist))
+  try:
+    users = api.UsersLookup(user_id=idlist)
+  except twitter.TwitterError as e:
+    handle_twitter_error(db, api, e, None, '/users/lookup', None)
+    if verbose():
+      print 'error, retrying one-by-one'
+    map(lambda i: get_if_missing(db, api, i), idlist)
+    return []
+  for u in users:
+    #u1 = user._json
+    #u = twitter.User.NewFromJsonDict(u1)
+    j = add_user(db, api, u)
+    addedlist.append(j)
+    idlist.remove(u.id)
+  for i in idlist:
+    if verbose():
+      print u'user {} not found, marking dead'.format(i)
+    bury_user(db, i)
+  return addedlist
+
+
 '''
   adds user u (as returned by twitter api, not json dictionary) to the
   followed users
