@@ -38,17 +38,25 @@ if __name__ == '__main__':
   parser.add_option('-v', '--verbose', action='store_true', dest='verbose', default=False, help='Make noise')
   parser.add_option('-u', '--userscan', action='store_true', dest='userscan', default=False, help='Scan all user tweets')
   parser.add_option("--id", action="store_true", dest="ids", default=False, help="Input is user ids, not tweet ids.")
+  parser.add_option("--before", action="store", dest="before", default=False, help="Before given date.")
+  parser.add_option("--after", action="store", dest="after", default=False, help="After given date.")
   (options, args) = parser.parse_args()
 
   verbose(options.verbose)
   db, api = init_state()
+
+  criteria = {}
+  if options.before:
+    criteria['$lte'] = dateutil.parser.parse(options.before)
+  if options.after:
+    criteria['$gte'] = dateutil.parser.parse(options.after)
 
   if options.userscan:
     for user in args:
       uid = long(user) if options.ids else None
       uname = None if options.ids else user
       u = get_tracked(db, uid, uname)
-      for tw in get_user_tweets(db, u['id'], None, None, batch=10):
+      for tw in get_user_tweets(db, u['id'], criteria, batch=10):
         if tw.get('deleted', False): continue
         twid = tw['id']
         addretweeters(db, api, twid)
