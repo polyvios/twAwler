@@ -6,9 +6,9 @@
 ###########################################
 
 """
-Compute the distribution of creation dates for all followers of a
-given user (this has been used in newspaper articles referring to
-bought followings).
+Compute the distribution of creation dates for all given users or the
+followers of all given users (this has been used in newspaper articles
+referring to bought followings).
 """
 
 import sys
