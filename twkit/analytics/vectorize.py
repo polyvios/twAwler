@@ -83,8 +83,8 @@ if __name__ == '__main__':
   parser.add_option("--save", action="store_true", dest="save", default=False, help="Only output file")
   parser.add_option("--id", action="store_true", dest="ids", default=False, help="Input is user ids.")
   #parser.add_option("--group", action="store_true", dest="group", default=False, help="Input is group name.")
-  parser.add_option("--before", action="store", dest="before", default=False, help="Before given date.")
-  parser.add_option("--after", action="store", dest="after", default=False, help="After given date.")
+  parser.add_option("-b", "--before", action="store", dest="before", default=False, help="Before given date.")
+  parser.add_option("-a", "--after", action="store", dest="after", default=False, help="After given date.")
   parser.add_option("--dumpgraph", action="store_true", dest="dumpgraph", default=False, help="Print graph of users.")
   parser.add_option("-e", "--entities", action="store", dest="entity_file", default='greekdata/entities.json', help="File with entities (def: greekdata/entities.json).")
   parser.add_option("--greek", action="store_true", dest="greek", default=False, help="Ignore any users not marked as greek")
@@ -95,7 +95,6 @@ if __name__ == '__main__':
 
   if verbose(): print u"{} start".format(datetime.utcnow())
 
-  criteria = {}
   if options.before:
     criteria['$lte'] = dateutil.parser.parse(options.before)
   if options.after:
@@ -148,6 +147,12 @@ if __name__ == '__main__':
           f.write(u'  "{}" -> "{}" [label=reply, weight={}];\n'.format(v['screen_name'], u['user'], u['count']))
       f.write("}\n")
     sys.exit(0)
+
+  criteria = {}
+  if options.before:
+    before = dateutil.parser.parse(options.before)
+  if options.after:
+    after = dateutil.parser.parse(options.after)
 
   if options.purge:
     if (raw_input("sure? (y/n)") == 'y'):
