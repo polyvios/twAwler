@@ -47,7 +47,7 @@ if __name__ == '__main__':
       'ignored': db.ignored.count(),
       'dead': db.cemetery.count(),
       'greeks': db.greeks.count(),
-      'favs': db.favorites.count()
+      'favs': db.favorites.count(),
       'protected': db.protected.count()
     }}, upsert=True)
 
