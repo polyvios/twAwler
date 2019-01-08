@@ -30,6 +30,7 @@ from twkit.utils import *
 
 usage_times_attrs = [
   'seen_total', 'total_inferred', 'seen_greek_total',
+  'deleted_tweets',
   'all_intervals',
   'seen_top_tweets', 'top_tweets_pcnt', 'top_intervals',
   'mention_indegree', 'mention_outdegree',
@@ -243,6 +244,7 @@ def usage_times_stats(db, u, criteria):
   plain_tweets = 0
   total = 0
   total_seen = 0
+  deleted_tweets = 0
 
   if verbose(): print " scan tweets"
   for tweet in get_user_tweets(db, u['id'], criteria):
@@ -250,6 +252,8 @@ def usage_times_stats(db, u, criteria):
     if 'created_at' not in tweet: continue
     total_seen += 1
     d = tweet['created_at']
+    if tweet.get('deleted', False):
+      deleted_tweets += 1
     if 'lang' in tweet:
       if tweet['lang'] == config.lang: el_tweets += 1
       languages[tweet['lang']] += 1
@@ -326,6 +330,7 @@ def usage_times_stats(db, u, criteria):
   u['total_inferred'] = total
   total = total_seen
   u['seen_greek_total'] = el_tweets
+  u['deleted_tweets'] = deleted_tweets
   u['number_of_languages'] = len(languages)
   u['tweets_per_language'] = [{'lang': i[0], 'count': i[1]} for i in languages.most_common(5)]
   u['all_intervals'] = [{'bucket': i, 'count': allquanta[i]} for i in qrange]
