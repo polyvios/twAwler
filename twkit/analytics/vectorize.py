@@ -120,6 +120,7 @@ if __name__ == '__main__':
       print "Save and queue options are incompatible. Aborting."
       sys.exit(2)
     userlist = (x['id'] for x in db.vectorizequeue.find())
+    options.ids = True
   else:
     userlist = []
     for x in args:
