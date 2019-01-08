@@ -211,4 +211,6 @@ if __name__ == '__main__':
       if '_id' in u: del u['_id']
       if vectorwriter:
         vectorwriter.writerow(u)
+    if options.queue:
+      db.vectorizequeue.delete_one({'id': u['id']})
 
