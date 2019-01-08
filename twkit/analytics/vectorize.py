@@ -74,26 +74,35 @@ def flatten_dict(key, value):
 
 if __name__ == '__main__':
   parser = optparse.OptionParser(usage=u'Usage: %prog [options] <user> [<user> ...]')
-  parser.add_option("--purge", action="store_true", dest="purge", default=False, help="Clean database")
   parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="List names of tracked users")
   parser.add_option("-f", "--force", action="store_true", dest="force", default=False, help="Re-vectorize even if cached recently")
-  parser.add_option("--all", action="store_true", dest="all", default=False, help="Re-vectorize all stale vectors (older than 1 month)")
-  parser.add_option("--query", action="store", dest="query", default="{}", help="Select who to vectorize")
   parser.add_option("-o", "--output", action="store", dest="filename", default=None, help="Output file")
-  parser.add_option("--save", action="store_true", dest="save", default=False, help="Only output file")
-  parser.add_option("--id", action="store_true", dest="ids", default=False, help="Input is user ids.")
-  #parser.add_option("--group", action="store_true", dest="group", default=False, help="Input is group name.")
   parser.add_option("-b", "--before", action="store", dest="before", default=False, help="Before given date.")
   parser.add_option("-a", "--after", action="store", dest="after", default=False, help="After given date.")
-  parser.add_option("--dumpgraph", action="store_true", dest="dumpgraph", default=False, help="Print graph of users.")
-  parser.add_option("-e", "--entities", action="store", dest="entity_file", default='greekdata/entities.json', help="File with entities (def: greekdata/entities.json).")
+  parser.add_option("--id", action="store_true", dest="ids", default=False, help="Input is user ids.")
+  parser.add_option("--all", action="store_true", dest="all", default=False, help="Re-vectorize all stale vectors (older than 1 month)")
+  parser.add_option("--query", action="store", dest="query", default="{}", help="Select who to vectorize")
   parser.add_option("--greek", action="store_true", dest="greek", default=False, help="Ignore any users not marked as greek")
+  parser.add_option("--purge", action="store_true", dest="purge", default=False, help="Clean database")
+  parser.add_option("--queue", action="store", dest="queue", default="{}", help="Vectorize users found in the vectorizequeue collection.")
+  #parser.add_option("--group", action="store_true", dest="group", default=False, help="Input is group name.")
+  parser.add_option("--dumpgraph", action="store_true", dest="dumpgraph", default=False, help="Print graph of users.")
+  parser.add_option("--save", action="store_true", dest="save", default=False, help="Only output file")
+  parser.add_option("-e", "--entities", action="store", dest="entity_file", default='greekdata/entities.json', help="File with entities (def: greekdata/entities.json).")
   (options, args) = parser.parse_args()
   verbose(options.verbose)
 
   db, api = init_state(False, False)
 
   if verbose(): print u"{} start".format(datetime.utcnow())
+
+  if options.purge:
+    if (raw_input("sure? (y/n)") == 'y'):
+      x = db.uservectors.delete_many({})
+      print "deleted ", x.deleted_count
+    else:
+      print "aborted"
+    sys.exit(0)
 
   if options.before:
     criteria['$lte'] = dateutil.parser.parse(options.before)
@@ -104,8 +113,13 @@ if __name__ == '__main__':
     q = {}
     if options.query:
       q = json.loads(options.query)
-    userlist = [x['id'] for x in db.uservectors.find(q, {'id':1})]
+    userlist = (x['id'] for x in db.uservectors.find(q, {'id':1}))
     options.ids = True
+  elif options.queue:
+    if options.dumpgraph:
+      print "Save and queue options are incompatible. Aborting."
+      sys.exit(2)
+    userlist = (x['id'] for x in db.vectorizequeue.find())
   else:
     userlist = []
     for x in args:
@@ -153,14 +167,6 @@ if __name__ == '__main__':
     before = dateutil.parser.parse(options.before)
   if options.after:
     after = dateutil.parser.parse(options.after)
-
-  if options.purge:
-    if (raw_input("sure? (y/n)") == 'y'):
-      x = db.uservectors.delete_many({})
-      print "deleted ", x.deleted_count
-    else:
-      print "aborted"
-    sys.exit(0)
 
   vectorwriter = None
   if options.filename:
