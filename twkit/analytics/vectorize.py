@@ -84,7 +84,7 @@ if __name__ == '__main__':
   parser.add_option("--query", action="store", dest="query", default="{}", help="Select who to vectorize")
   parser.add_option("--greek", action="store_true", dest="greek", default=False, help="Ignore any users not marked as greek")
   parser.add_option("--purge", action="store_true", dest="purge", default=False, help="Clean database")
-  parser.add_option("--queue", action="store", dest="queue", default="{}", help="Vectorize users found in the vectorizequeue collection.")
+  parser.add_option("--queue", action="store_true", dest="queue", default=False, help="Vectorize users found in the vectorizequeue collection.")
   #parser.add_option("--group", action="store_true", dest="group", default=False, help="Input is group name.")
   parser.add_option("--dumpgraph", action="store_true", dest="dumpgraph", default=False, help="Print graph of users.")
   parser.add_option("--save", action="store_true", dest="save", default=False, help="Only output file")
@@ -104,6 +104,7 @@ if __name__ == '__main__':
       print "aborted"
     sys.exit(0)
 
+  criteria = {}
   if options.before:
     criteria['$lte'] = dateutil.parser.parse(options.before)
   if options.after:
@@ -162,12 +163,6 @@ if __name__ == '__main__':
           f.write(u'  "{}" -> "{}" [label=reply, weight={}];\n'.format(v['screen_name'], u['user'], u['count']))
       f.write("}\n")
     sys.exit(0)
-
-  criteria = {}
-  if options.before:
-    before = dateutil.parser.parse(options.before)
-  if options.after:
-    after = dateutil.parser.parse(options.after)
 
   vectorwriter = None
   if options.filename:
