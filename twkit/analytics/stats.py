@@ -302,7 +302,14 @@ def usage_times_stats(db, u, criteria):
         if 'quoted_status' in tweet:
           quotecnt[tweet['quoted_status']['user']['id']] += 1
         else:
-          print "Found quoter tweet with missing quoted status: {}".format(tweet['id'])
+          print u"Found quoter tweet with missing quoted status: {} -> {}".format(tweet['id'], tweet['quoted_status_id'])
+          qid = long(tweet['quoted_status_id'])
+          tt = db.tweets.find_one({'id': qid})
+          if tt is None:
+            print "Could not find quoted status locally"
+          else:
+            del tt['_id']
+            db.tweets.update_one(tweet, {'$set' : { 'quoted_status_id': qid, 'quoted_status' : tt }})
       if len(tweet.get('urls', [])) == 0 and len(tweet.get('user_mentions',[])) == 0 and len(tweet.get('hashtags', [])) == 0:
         plain_tweets += 1
     hcnt[d.hour] += 1
