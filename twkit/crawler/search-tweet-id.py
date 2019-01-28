@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 ###########################################
 # (c) 2016-2018 Polyvios Pratikakis
@@ -27,14 +27,17 @@ idlist = []
 for x in Bar("Lookup:", suffix = '%(index)d/%(max)d - %(eta_td)s').iter(sys.argv[1:]):
   twid = long(x)
   old = db.tweets.find_one({'id': twid})
-  if old: continue
+  #if old and 'text' in old:
+  #  gprint(old)
+  #  continue
   idlist.append(twid)
 
+print idlist
 bulk = db.tweets.initialize_unordered_bulk_op()
 cursor = api.statuses_lookup(id_=idlist, trim_user=True)
 for tweet in Bar("Tweets:", suffix = '%(index)d/%(max)d - %(eta_td)s').iter(cursor):
   j1 = tweet._json
   tw = twitter.Status.NewFromJsonDict(j1)
   j2 = pack_tweet(db, tw)
-  bulk.insert(j2)
+  bulk.find({'id': j2['id']}).upsert().update({'$set': j2})
 bulk.execute()
