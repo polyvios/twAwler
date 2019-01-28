@@ -66,7 +66,8 @@ if __name__ == '__main__':
       else:
         u = lookup_user(db, long(uname), None) if options.ids else lookup_user(db, None, uname)
       if u is None:
-        sys.stderr.write(u'user {} missing\n'.format(uname))
+        if verbose():
+          sys.stderr.write(u'user {} missing\n'.format(uname))
       else:
         userlist.append(u)
     if verbose():
