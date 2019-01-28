@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 ###########################################
 # (c) 2016-2018 Polyvios Pratikakis
@@ -114,7 +114,7 @@ if __name__ == '__main__':
     uname = None if options.ids else user
     r = db.frequences.delete_one({'id': uid})
     if r.deleted_count == 0 and (options.late or options.expected):
-      if verbose: print "Missing from frequences, skip"
+      if verbose(): print "Missing from frequences, skip"
       continue
     if options.req:
       dumpall(db, api, uid, uname, max_req=options.req)
