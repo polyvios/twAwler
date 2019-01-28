@@ -51,10 +51,10 @@ if __name__ == '__main__':
     favoriters = get_favoriters(db, uid)
     if options.list:
       for faver, cnt in favoriters.iteritems():
-        if options.ids:
-          print u'{} {} {}'.format(faver, uid, len(cnt))
-        else:
-          print u'{} {} {}'.format(id_to_userstr(db, faver), userstr, len(cnt))
+        #if options.ids:
+        print u'{} {} {}'.format(faver, uid, len(cnt))
+        #else:
+        #  print u'{} {} {}'.format(id_to_userstr(db, faver), userstr, len(cnt))
     peruser[uid] = favoriters
   if options.common:
     common = None
