@@ -71,7 +71,7 @@ def pull_replied(db, api, twitterapi):
 def pull_quoted(db, api, twitterapi):
   tweets = db.tweets.find(
     {'quoted_status_id': {'$gt': 0}, 'quote_pulled': None},
-    {'quoted_status_id': 1}
+    {'quoted_status_id': 1, 'quoted_status': 1, 'id': 1}
   )
   if verbose():
     tweets = Bar("Processing:", max=tweets.count(), suffix = '%(index)d/%(max)d - %(eta_td)s').iter(tweets)
@@ -85,12 +85,16 @@ def pull_quoted(db, api, twitterapi):
     #if get_tracked(db, uid=t['user']['id']) is None or not is_greek(db, uid=t['user']['id']): continue
     orig = db.tweets.find_one({'id': twid})
     if orig:
+      if 'quoted_status' not in t:
+        del orig['_id']
+        db.tweets.update_one(t, {'$set' : { 'quoted_status' : orig }})
+        if verbose(): print u"filled in tweet {} into {}".format(twid, t['id'])
       db.tweets.update(t, {'$set': {'quote_pulled': True}})
       continue
     if twid not in idlist:
       idlist.append(twid)
     if verbose(): print " ", twid
-    if len(idlist) == 100:
+    if len(idlist) >= 100:
       add100(db, api, twitterapi, idlist)
       idlist = []
   if len(idlist):
