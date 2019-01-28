@@ -130,15 +130,20 @@ if __name__ == '__main__':
     f = u['tweets_per_hour']
     d = datetime.utcnow() - u['last_tweet_at']
     e = d.total_seconds() * f / 3600
-    db.frequences.insert({
-      'id': u['id'],
-      'screen_name_lower': u['screen_name_lower'],
-      'twph': long(f),
-      'hours': long(d.total_seconds()/3600),
-      'expected': long(e),
-      'seentw': u['seen_tweets'],
-      'seenhr': long(u['total_hours'])
-    })
+    try:
+      db.frequences.insert({
+        'id': u['id'],
+        'screen_name_lower': u['screen_name_lower'],
+        'twph': long(f),
+        'hours': long(d.total_seconds()/3600),
+        'expected': long(e),
+        'seentw': u['seen_tweets'],
+        'seenhr': long(u['total_hours'])
+      })
+    except:
+      if verbose():
+        print "ignoring exception for {}: {}".format(u['id'], sys.exc_info())
+      pass
  
     #print "{} tweets per hour {} hours since latest {} expected for {} {} tweets in {} hours".format(
     #  long(f),

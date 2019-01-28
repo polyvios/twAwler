@@ -51,6 +51,7 @@ if __name__ == '__main__':
   parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="Make noise.")
   parser.add_option("--tracked", action="store_true", dest="tracked", default=False, help="Limit to tracked users.")
   parser.add_option("-f", "--filter", action="store_true", dest="filter", default=False, help="Only print info for accounts with enough data.")
+  parser.add_option("--force", action="store_true", dest="force", default=False, help="Compute anyway.")
   parser.add_option("-u", "--user", action="store_true", dest="user", default=False, help="Only print info for given accounts.")
   parser.add_option("--id", action="store_true", dest="ids", default=False, help="Users given as IDs.")
   (options, args) = parser.parse_args()
@@ -79,7 +80,7 @@ if __name__ == '__main__':
       sys.stderr.write(u'impossible\n')
       continue
     uid = u['id']
-    if is_greek(db, uid):
+    if not options.force and is_greek(db, uid):
       #if verbose(): sys.stderr.write(u'{}/{} already greek, skip\n'.format(id_to_userstr(db, uid), uid))
       continue
     #counter = db.tweets.find({'user.id': uid, 'retweeted_status': None}).count()

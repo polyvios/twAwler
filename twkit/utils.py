@@ -240,6 +240,9 @@ def suspend(db, uid):
   try:
     if uid is not None:
       db.suspended.update_one({'id': uid}, {'$set': {'id': uid, 'last': datetime.utcnow()}}, upsert=True)
+      u = lookup_user(db, uid)
+      if u:
+        db.users.update_one(u, {'$set': {'suspended': True}})
   except:
     print u'cannot insert suspended', uid, sys.exc_info()
   pass
@@ -336,7 +339,7 @@ def add_user(db, api, u):
   if oldu:
     other = db.following.find_one({'screen_name_lower': user.lower()})
     if other is not None and other['id'] != userid:
-      print "{} lost screen_name, refreshing".format(other['id'])
+      print u'{} lost screen_name, refreshing'.format(other['id'])
       add_id(db, api, other['id'])
     db.following.update_one(oldu, {'$set': {'screen_name_lower': user.lower()}})
   for us in db.users.find({'screen_name_lower': user}):
@@ -355,7 +358,7 @@ def add_user(db, api, u):
   if 'screen_name' in j:
     j['screen_name_lower'] = j['screen_name'].lower()
   else:
-    if verbose(): print "found mysterious user"
+    if verbose(): print u'found mysterious user'
     j['screen_name'] = u'{}'.format(j['id'])
     j['screen_name_lower'] = u'{}'.format(j['id'])
   j['created_at'] = d
@@ -389,7 +392,7 @@ def handle_twitter_error(db, api, e, uid=None, waitstr=None, waitfunc=None):
   if isinstance(e.message, list):
     m = e.message[0]
     if 'code' in m and m['code'] == 179 and uid:
-      print "found protected user", uid
+      print u'found protected user', uid
       protected(db, uid)
       return False
     if 'code' in m and m['code'] == 88 and waitstr:
@@ -416,10 +419,10 @@ def handle_twitter_error(db, api, e, uid=None, waitstr=None, waitfunc=None):
       print uid, u'dead, buried'
       return False
     if 'code' in m and m['code'] == 34 and uid:
-      bury_user(db, uid)
-      print uid, u'probably dead, buried'
+      #bury_user(db, uid)
+      print uid, u'probably dead but not buried as this error is unreliable:', sys.exc_info()
       return False
-  print "couldn't handle:",
+  print u'({},{}) could not handle:'.format(uid, waitstr),
   gprint(e)
   return False
 
@@ -446,6 +449,47 @@ def add_id(db, api, uid, wait=True, force=False):
     print u'some other error, skip user', uid, sys.exc_info()
     return
   if verbose(): print u.screen_name.lower(), u'inserted'
+
+
+def user_is_missing(db, uid):
+  if is_dead(db, uid): return False
+  if is_suspended(db, uid): return False
+  u = db.users.find_one({'id': uid})
+  if u is None: return True
+  return False
+ 
+def get_if_missing(db, api, uid):
+  x = user_is_missing(db, uid)
+  if x:
+    print u'unknown {}'.format(uid),
+    add_id(db, api, uid)
+    u = lookup_user(db, uid)
+    if u is not None:
+      print u'{}'.format(u.get('screen_name_lower', 'not found'))
+
+
+def add100_id(db, api, idlist):
+  addedlist = []
+  if verbose(): print 'another {}'.format(len(idlist))
+  try:
+    users = api.UsersLookup(user_id=idlist)
+  except twitter.TwitterError as e:
+    handle_twitter_error(db, api, e, None, '/users/lookup', None)
+    if verbose():
+      print 'error, retrying one-by-one'
+    map(lambda i: get_if_missing(db, api, i), idlist)
+    return []
+  for u in users:
+    #u1 = user._json
+    #u = twitter.User.NewFromJsonDict(u1)
+    j = add_user(db, api, u)
+    addedlist.append(j)
+    idlist.remove(u.id)
+  for i in idlist:
+    if verbose():
+      print u'user {} not found, marking dead'.format(i)
+    bury_user(db, i)
+  return addedlist
 
 
 '''
