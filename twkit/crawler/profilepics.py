@@ -26,12 +26,22 @@ from twkit.crawler.freq import *
 if __name__ == '__main__':
   parser = optparse.OptionParser()
   parser.add_option('-v', '--verbose', action='store_true', dest='verbose', default=False, help='List names of tracked users')
+  parser.add_option("--skip", action="store", dest="skip", type="int", default=0, help="Restart from index")
+  parser.add_option("--stopafter", action="store", dest="stopafter", type="int", default=0, help="Stop after scanning how many")
   (options, args) = parser.parse_args()
   verbose(options.verbose)
   db, api = init_state()
-  users = db.following.find().batch_size(100)
+  users = db.following.find().batch_size(200)
+  count = users.count();
+  if options.skip > 0:
+    users = users.skip(options.skip)
+    count -= options.skip
+  if options.stopafter:
+    users = users.limit(options.stopafter)
+    count = min(options.stopafter, count)
   if verbose():
-    users = Bar("Processing:", max=users.count(), suffix = '%(index)d/%(max)d - %(eta_td)s').iter(users)
+    users = Bar("Processing:", max=count, suffix = '%(index)d/%(max)d - %(eta_td)s').iter(users)
+
   for u in users:
     uid = u['id']
     us = lookup_user(db, uid)
@@ -41,7 +51,8 @@ if __name__ == '__main__':
     #if us.get('deleted', False):
       #print "User marked deleted. Skip."
       #continue
-    if cdata.get('downloaded_profile_date', datetime(1970,01,01,00,00,00)) > (d - timedelta(days=30)):
+    if cdata.get('downloaded_profile_date',
+    datetime(1970,01,01,00,00,00)) > (d - timedelta(days=config.profilepic_expiration_days)):
       #if verbose(): print "Picture already downloaded. Skip."
       continue
     if 'profile_image_url' not in us or not us['profile_image_url'].startswith('http'): continue
