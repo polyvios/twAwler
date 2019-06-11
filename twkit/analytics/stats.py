@@ -69,7 +69,8 @@ usage_times_attrs = [
   'tweets_per_hour_of_day', 'tweets_per_weekday', 'tweets_per_active_day', 'tweets_per_day',
   'last_tweeted_at', 'life_time', 'max_daily_interval',
   'number_of_languages', 'tweets_per_language',
-  'last_month'
+  'last_month',
+  'userinfo_timeseries'
   ]
 usage_times_buckets_sec = [1, 30, 60, 3600, 3600*24, 3600*24*7, 3600*24*30, 3600*24*365]
 
@@ -96,16 +97,16 @@ def get_all_tweets(db, criteria, batch=None):
   return tweets
 
 cached_tweets={}
-def get_user_tweets(db, userid, criteria, batch=None, cacheifsmall=True):
+def get_user_tweets(db, userid, criteria, batch=None, cacheifsmall=True, timesort=1):
   global cached_tweets
   if cacheifsmall:
     if cached_tweets.get('uid', -1) == userid and 'tweets' in cached_tweets:
       # and cached_tweets.get('before', None) == before and cached_tweets.get('after', None) == after:
       return cached_tweets['tweets']
   if criteria:
-    tweets = db.tweets.find({'user.id' : userid, 'created_at' : criteria }).sort('created_at', 1)
+    tweets = db.tweets.find({'user.id' : userid, 'created_at' : criteria }).sort('created_at', timesort)
   else:
-    tweets = db.tweets.find({'user.id' : userid}).sort('created_at', 1)
+    tweets = db.tweets.find({'user.id' : userid}).sort('created_at', timesort)
   if batch:
     tweets = tweets.batch_size(batch)
   count = tweets.count()
@@ -217,6 +218,30 @@ def fill_lastmonth_usage(db, u):
   u['last_month'] = [{'day': monthstart+timedelta(days=i), 'hour': j, 'count': lastmonth[i][j]} for i in lastmonth for j in lastmonth[i]]
 
 
+def fill_userinfo_timeseries(db, u):
+  data = [
+    { 'key': 'statuses', 'values': [] },
+    { 'key': 'friends', 'values': [] },
+    { 'key': 'followers', 'values': [] }
+  ]
+  users = db.users.find(
+    { 'id': u['id'] },
+    { 'statuses_count': 1,
+      'friends_count': 1,
+      'followers_count': 1,
+      'timestamp_at':1
+    }
+  ).sort('_id', 1)
+  cnt = users.count()
+  #skip = 0
+  #if cnt > 1000:
+  for x in users:
+    t = x['timestamp_at'] if 'timestamp_at' in x else x['_id'].generation_time
+    if 'statuses_count' in x: data[0]['values'].append( {'date': t, 'y': x['statuses_count']} )
+    if 'friends_count' in x: data[1]['values'].append( {'date': t, 'y': x['friends_count']} )
+    if 'followers_count' in x: data[2]['values'].append( {'date': t, 'y': x['followers_count']} )
+  u['userinfo_timeseries'] = data
+
 
 def usage_times_stats(db, u, criteria):
   userid = u['id']
@@ -300,7 +325,11 @@ def usage_times_stats(db, u, criteria):
         lasttoptime = d
       if 'quoted_status_id' in tweet:
         if 'quoted_status' in tweet:
-          quotecnt[tweet['quoted_status']['user']['id']] += 1
+          try:
+            quotecnt[tweet['quoted_status']['user']['id']] += 1
+          except:
+            print "\nerror!"
+            gprint(tweet)
         else:
           print u"Found quoter tweet with missing quoted status: {} -> {}".format(tweet['id'], tweet['quoted_status_id'])
           qid = long(tweet['quoted_status_id'])
@@ -491,13 +520,13 @@ def usage_times_stats(db, u, criteria):
   u['tweets_per_weekday'] = [{'day': i, 'count': dcnt[i]} for i in dcnt]
   twdinterval = tweets_per_day.values()
   u['tweets_per_active_day'] = {
-    'min': min(twdinterval) if len(twdinterval) else None,
-    'minday': min(tweets_per_day, key=tweets_per_day.get) if len(twdinterval) else None,
-    'max': max(twdinterval) if len(twdinterval) else None,
-    'maxday': max(tweets_per_day, key=tweets_per_day.get) if len(twdinterval) else None,
-    'avg': numpy.mean(twdinterval) if len(twdinterval) else None,
-    'med': numpy.median(twdinterval) if len(twdinterval) else None,
-    'std': numpy.std(twdinterval) if len(twdinterval) else None
+    'min': min(twdinterval) if len(twdinterval) else 0,
+    'minday': min(tweets_per_day, key=tweets_per_day.get) if len(twdinterval) else 0,
+    'max': max(twdinterval) if len(twdinterval) else 0,
+    'maxday': max(tweets_per_day, key=tweets_per_day.get) if len(twdinterval) else 0,
+    'avg': numpy.mean(twdinterval) if len(twdinterval) else 0,
+    'med': numpy.median(twdinterval) if len(twdinterval) else 0,
+    'std': numpy.std(twdinterval) if len(twdinterval) else 0
   }
   startd = u['created_at'].replace(hour=0, minute=0, second=0, microsecond=0)
   endd = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
@@ -516,6 +545,7 @@ def usage_times_stats(db, u, criteria):
     'std': numpy.std(twdinterval) if len(twdinterval) else None
   }
   fill_lastmonth_usage(db, u)
+  fill_userinfo_timeseries(db, u)
 
 
 # end
@@ -533,8 +563,8 @@ def fill_follower_stats(db, u):
   grfrcnt = 0
   trackedfr = 0
   #for fid in db.follow.find({'id': u['id']}).distinct('follows'):
-  friends = set(get_friends(db, u['id']))
-  followers = set(get_followers(db, u['id']))
+  friends = frozenset(get_friends(db, u['id']))
+  followers = frozenset(get_followers(db, u['id']))
   fr_fo_count = len(friends & followers)
   all_count = len(friends | followers)
   fr_fo_jaccard = 1.0 * fr_fo_count / (all_count if all_count > 0 else 1)
