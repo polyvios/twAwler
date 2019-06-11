@@ -18,7 +18,10 @@ import json
 from twkit.utils import *
 from pymongo.errors import BulkWriteError
 
-def addlistmembers(db, api, list_id, slug, wait=False):
+_generic_exception = False
+
+def addlistmembers(db, api, list_id, slug):
+  global _generic_exception
   last = db.lastscan.find_one({'list_id': list_id, 'action': 'listmembers'})
   now = datetime.utcnow()
   if last is not None and last['date'] + timedelta(days=60) > now:
@@ -28,7 +31,16 @@ def addlistmembers(db, api, list_id, slug, wait=False):
     cursor = api.GetListMembers(list_id, slug, skip_status=True, include_entities=False)
   except twitter.TwitterError as e:
     if handle_twitter_error(db, api, e, uid, 'lists/members', None):
-      addlistmembers(db, api, list_id, slug, False)
+      addlistmembers(db, api, list_id, slug)
+    return
+  except:
+    e = sys.exc_info()
+    if _generic_exception:
+      sys.stderr.write(u'Got exception again, abort: {}'.format(e))
+      raise 
+    _generic_exception = True
+    sys.stderr.write(u'Got an exception, sleep and retry once: {}'.format(sys.exc_info()))
+    addlistmembers(db, api, list_id, slug)
     return
   print u'got {}'.format(len(cursor))
   now = datetime.utcnow()
@@ -51,7 +63,8 @@ def addlistmembers(db, api, list_id, slug, wait=False):
     upsert=True)
 
 
-def addlistsubscriptions(db, api, uid, wait, force):
+def addlistsubscriptions(db, api, uid, force):
+  global _generic_exception
   last = db.lastscan.find_one({'id': uid, 'action': 'listsubscriptions'})
   now = datetime.utcnow()
   if not force and last is not None and last['date'] + timedelta(days=60) > now:
@@ -73,6 +86,15 @@ def addlistsubscriptions(db, api, uid, wait, force):
         continue
       pprint.pprint(e)
       return
+    except:
+      e = sys.exc_info()
+      if _generic_exception:
+        sys.stderr.write(u'Got exception again, abort: {}'.format(e))
+        raise 
+      _generic_exception = True
+      sys.stderr.write(u'Got an exception, sleep and retry once: {}'.format(sys.exc_info()))
+      addlistsubscriptions(db, api, uid, force)
+      return
     print u'got {} lists'.format(len(lists))
     if len(lists) == 0: continue
     bulk = db.listsubscribers.initialize_unordered_bulk_op()
@@ -83,7 +105,7 @@ def addlistsubscriptions(db, api, uid, wait, force):
       k = l.copy()
       l['date'] = now
       db.lists.update_one(k, {'$set': l}, upsert=True)
-      addlistmembers(db, api, l['id'], l['slug'], True)
+      addlistmembers(db, api, l['id'], l['slug'])
       d = {'date': now, 'user_id': uid, 'list_id': l['id']}
       bulk.insert(d)
     try:
@@ -97,7 +119,8 @@ def addlistsubscriptions(db, api, uid, wait, force):
     upsert=True)
 
 
-def addlistmemberships(db, api, uid, wait, force):
+def addlistmemberships(db, api, uid, force):
+  global _generic_exception
   last = db.lastscan.find_one({'id': uid, 'action': 'listmemberships'})
   now = datetime.utcnow()
   if not force and last is not None and last['date'] + timedelta(days=60) > now:
@@ -119,6 +142,15 @@ def addlistmemberships(db, api, uid, wait, force):
         continue
       pprint.pprint(e)
       return
+    except:
+      e = sys.exc_info()
+      if _generic_exception:
+        sys.stderr.write(u'Got exception again, abort: {}'.format(e))
+        raise 
+      _generic_exception = True
+      sys.stderr.write(u'Got an exception, sleep and retry once: {}'.format(sys.exc_info()))
+      addlistmemberships(db, api, uid, force)
+      return
     print u'got {} lists'.format(len(lists))
     for l in lists:
       #l = json.loads(unicode(l))
@@ -127,13 +159,14 @@ def addlistmemberships(db, api, uid, wait, force):
       k = l.copy()
       l['date'] = now
       db.lists.update_one(k, {'$set': l}, upsert=True)
-      addlistmembers(db, api, l['id'], l['slug'], True)
+      addlistmembers(db, api, l['id'], l['slug'])
   db.lastscan.update_one(
     {'id': uid, 'action': 'listmemberships'},
     {'$set': {'date': now}},
     upsert=True)
 
-def addlists(db, api, uid, wait, force):
+def addlists(db, api, uid, force):
+  global _generic_exception
   last = db.lastscan.find_one({'id': uid, 'action': 'lists'})
   now = datetime.utcnow()
   if not force and last is not None and last['date'] + timedelta(days=60) > now:
@@ -143,7 +176,16 @@ def addlists(db, api, uid, wait, force):
     cursor = api.GetLists(user_id=uid)
   except twitter.TwitterError as e:
     if handle_twitter_error(db, api, e, uid, 'lists/ownerships', None):
-      addlists(db, api, uid, False, force)
+      addlists(db, api, uid, force)
+    return
+  except:
+    e = sys.exc_info()
+    if _generic_exception:
+      sys.stderr.write(u'Got exception again, abort: {}'.format(e))
+      raise 
+    _generic_exception = True
+    sys.stderr.write(u'Got an exception, sleep and retry once: {}'.format(sys.exc_info()))
+    addlists(db, api, uid, force)
     return
   print u'got {} lists'.format(len(cursor))
   for l in cursor:
@@ -153,7 +195,7 @@ def addlists(db, api, uid, wait, force):
     k = l.copy()
     l['date'] = now
     db.lists.update_one(k, {'$set': l}, upsert=True)
-    addlistmembers(db, api, l['id'], l['slug'], True)
+    addlistmembers(db, api, l['id'], l['slug'])
   db.lastscan.update_one(
     {'id': uid, 'action': 'lists'},
     {'$set': {'date': now}},
@@ -198,11 +240,11 @@ if __name__ == '__main__':
       if verbose(): print "skip ignored user", uname, uid
       continue
     if options.memberships:
-      addlistmemberships(db, api, u['id'], True, options.force)
+      addlistmemberships(db, api, u['id'], options.force)
     if options.subscriptions:
-      addlistsubscriptions(db, api, u['id'], True, options.force)
+      addlistsubscriptions(db, api, u['id'], options.force)
     if options.lists:
-      addlists(db, api, u['id'], True, options.force)
+      addlists(db, api, u['id'], options.force)
     if not options.lists and not options.memberships and not options.subscriptions:
       print "pick one of possible crawl sources. abort."
       sys.exit(1)
