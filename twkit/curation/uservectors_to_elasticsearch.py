@@ -66,7 +66,12 @@ user_features = [
   'bio_words', 'bio_upper_words', 'bio_lower_words',
   'bio_punctuation_chars', 'bio_digit_chars', 'bio_alpha_chars',
   'bio_upper_chars', 'bio_lower_chars', 'bio_greek_chars',
-  'bio_total_chars'
+  'bio_total_chars',
+  'most_mentioned_users', 'most_mentioned_by',
+  'most_retweeted_users', 'most_retweeted_by',
+  'most_replied_to', 'most_replied_by',
+  'favoriters', 'favorited',
+  'most_favoriters', 'most_favorited'
 ]
 
 if __name__ == '__main__':

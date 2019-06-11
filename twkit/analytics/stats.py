@@ -30,6 +30,7 @@ from twkit.utils import *
 
 usage_times_attrs = [
   'seen_total', 'total_inferred', 'seen_greek_total',
+  'deleted_tweets',
   'all_intervals',
   'seen_top_tweets', 'top_tweets_pcnt', 'top_intervals',
   'mention_indegree', 'mention_outdegree',
@@ -37,6 +38,18 @@ usage_times_attrs = [
   'mention_avg_inweight', 'mention_avg_outweight',
   'mention_out_in_ratio', 'mention_pcnt',
   'most_mentioned_users', 'most_mentioned_by',
+
+  'quote_indegree',
+  'quote_outdegree',
+  'quote_inweight',
+  'quote_outweight',
+  'quote_avg_inweight',
+  'quote_avg_outweight',
+  'quote_out_in_ratio',
+  'quote_pcnt',
+  'most_quoted_users',
+  'most_quoted_by',
+
   'retweet_indegree', 'retweet_outdegree',
   'retweet_inweight', 'retweet_outweight',
   'retweet_avg_inweight', 'retweet_avg_outweight',
@@ -201,7 +214,7 @@ def fill_lastmonth_usage(db, u):
       days = sec // 3600 // 24
       hours = sec // 3600 % 24
       lastmonth[days][hours] += 1
-  u['last_month'] = [{'day': i, 'hour': j, 'count': lastmonth[i][j]} for i in lastmonth for j in lastmonth[i]]
+  u['last_month'] = [{'day': monthstart+timedelta(days=i), 'hour': j, 'count': lastmonth[i][j]} for i in lastmonth for j in lastmonth[i]]
 
 
 
@@ -234,6 +247,7 @@ def usage_times_stats(db, u, criteria):
   replycnt = Counter()
 
   mentioncnt = Counter()
+  quotecnt = Counter()
 
   sourcecnt = Counter()
   lastday = datetime.now()
@@ -243,6 +257,7 @@ def usage_times_stats(db, u, criteria):
   plain_tweets = 0
   total = 0
   total_seen = 0
+  deleted_tweets = 0
 
   if verbose(): print " scan tweets"
   for tweet in get_user_tweets(db, u['id'], criteria):
@@ -250,6 +265,8 @@ def usage_times_stats(db, u, criteria):
     if 'created_at' not in tweet: continue
     total_seen += 1
     d = tweet['created_at']
+    if tweet.get('deleted', False):
+      deleted_tweets += 1
     if 'lang' in tweet:
       if tweet['lang'] == config.lang: el_tweets += 1
       languages[tweet['lang']] += 1
@@ -281,6 +298,18 @@ def usage_times_stats(db, u, criteria):
         log_event(d, lasttoptime, topquanta, topintervals)
         seentop += 1
         lasttoptime = d
+      if 'quoted_status_id' in tweet:
+        if 'quoted_status' in tweet:
+          quotecnt[tweet['quoted_status']['user']['id']] += 1
+        else:
+          print u"Found quoter tweet with missing quoted status: {} -> {}".format(tweet['id'], tweet['quoted_status_id'])
+          qid = long(tweet['quoted_status_id'])
+          tt = db.tweets.find_one({'id': qid})
+          if tt is None:
+            print "Could not find quoted status locally"
+          else:
+            del tt['_id']
+            db.tweets.update_one(tweet, {'$set' : { 'quoted_status_id': qid, 'quoted_status' : tt }})
       if len(tweet.get('urls', [])) == 0 and len(tweet.get('user_mentions',[])) == 0 and len(tweet.get('hashtags', [])) == 0:
         plain_tweets += 1
     hcnt[d.hour] += 1
@@ -319,6 +348,20 @@ def usage_times_stats(db, u, criteria):
   else:
     most_engaging_tweet = None
 
+  if verbose(): print " quotes"
+  user_quotes = get_user_quoted_tweets(db, u['id'], criteria)
+  quotedcnt = Counter()
+  quotedtw = Counter()
+  for tweet in user_quotes:
+    quotedcnt[tweet['user']['id']] += 1
+    if 'quoted_status_id' not in tweet: continue
+    quotedtw[tweet['quoted_status_id']] += 1
+  most_quoted = quotedtw.most_common(1)
+  if len(most_quoted):
+    most_quoted_tweet = db.tweets.find_one({'id': most_quoted[0]})
+  else:
+    most_quoted_tweet = None
+
   if verbose(): print " saving"
   #total = seentop + seenreplies + seenrt + seenmention
   qrange = range(0,len(usage_times_buckets_sec))
@@ -326,6 +369,7 @@ def usage_times_stats(db, u, criteria):
   u['total_inferred'] = total
   total = total_seen
   u['seen_greek_total'] = el_tweets
+  u['deleted_tweets'] = deleted_tweets
   u['number_of_languages'] = len(languages)
   u['tweets_per_language'] = [{'lang': i[0], 'count': i[1]} for i in languages.most_common(5)]
   u['all_intervals'] = [{'bucket': i, 'count': allquanta[i]} for i in qrange]
@@ -342,8 +386,19 @@ def usage_times_stats(db, u, criteria):
   u['mention_avg_outweight'] = 1.0 * u['mention_outweight'] / max(1, u['mention_outdegree'])
   u['mention_out_in_ratio'] = 1.0 * u['mention_outdegree'] / max(1, u['mention_indegree'])
   u['mention_pcnt'] = 100.0 * u['mention_outweight'] / total
-  u['most_mentioned_users'] = [{'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in mentioncnt.most_common(500)]
-  u['most_mentioned_by'] = [{'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in mentionbycnt.most_common(500)]
+  u['most_mentioned_users'] = [{'id': i[0], 'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in mentioncnt.most_common(500)]
+  u['most_mentioned_by'] = [{'id': i[0], 'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in mentionbycnt.most_common(500)]
+
+  u['quote_indegree'] = len(quotedcnt)
+  u['quote_outdegree'] = len(quotecnt)
+  u['quote_inweight'] = sum(quotedcnt.values())
+  u['quote_outweight'] = sum(quotecnt.values())
+  u['quote_avg_inweight'] = 1.0 * u['quote_inweight'] / max(1, u['quote_indegree'])
+  u['quote_avg_outweight'] = 1.0 * u['quote_outweight'] / max(1, u['quote_outdegree'])
+  u['quote_out_in_ratio'] = 1.0 * u['quote_outdegree'] / max(1, u['quote_indegree'])
+  u['quote_pcnt'] = 100.0 * u['quote_outweight'] / total
+  u['most_quoted_users'] = [{'id': i[0], 'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in quotecnt.most_common(500)]
+  u['most_quoted_by'] = [{'id': i[0], 'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in quotedcnt.most_common(500)]
 
   u['retweet_indegree'] = len(rtbycnt)
   u['retweet_outdegree'] = len(rtcnt)
@@ -353,8 +408,8 @@ def usage_times_stats(db, u, criteria):
   u['retweet_avg_outweight'] = 1.0 * u['retweet_outweight'] / max(1, u['retweet_outdegree'])
   u['retweet_out_in_ratio'] = 1.0 * u['retweet_outdegree'] / max(1, u['retweet_indegree'])
   u['retweet_pcnt'] = 100.0 * u['retweet_outdegree'] / total
-  u['most_retweeted_by'] = [{'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in rtbycnt.most_common(500)]
-  u['most_retweeted_users'] = [{'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in rtcnt.most_common(500)]
+  u['most_retweeted_by'] = [{'id': i[0], 'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in rtbycnt.most_common(500)]
+  u['most_retweeted_users'] = [{'id': i[0], 'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in rtcnt.most_common(500)]
   u['rt_intervals'] = [{'bucket': i, 'count': rtquanta[i]} for i in qrange]
 
   u['reply_indegree'] = len(repliedcnt)
@@ -365,8 +420,8 @@ def usage_times_stats(db, u, criteria):
   u['reply_avg_outweight'] = 1.0 * u['reply_outweight'] / max(1, u['reply_outdegree'])
   u['reply_out_in_ratio'] = 1.0 * u['reply_outdegree'] / max(1, u['reply_indegree'])
   u['replies_pcnt'] = 100.0 * u['reply_outdegree'] / total
-  u['most_replied_to'] = [{'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in replycnt.most_common(500)]
-  u['most_replied_by'] = [{'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in repliedcnt.most_common(500)]
+  u['most_replied_to'] = [{'id': i[0], 'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in replycnt.most_common(500)]
+  u['most_replied_by'] = [{'id': i[0], 'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in repliedcnt.most_common(500)]
   u['reply_intervals'] = [{'bucket': i, 'count': replyquanta[i]} for i in qrange]
   u['seen_replied_to'] = len(repliedto)
   u['most_engaging_tweet'] = {'id': most_engaging_tweet['id'], 'text': most_engaging_tweet.get('text', '<not crawled>')} if most_engaging_tweet is not None else None
@@ -940,10 +995,10 @@ def get_favorited(db, uid):
 def fill_favoriter_stats(db, u):
   f = Counter({k: len(v) for k,v in get_favoriters(db, u['id']).iteritems()})
   u['favoriters'] = len(f)
-  u['most_favoriters'] = [{'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in f.most_common(500)]
+  u['most_favoriters'] = [{'id': i[0], 'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in f.most_common(500)]
   fd = Counter({k: len(v) for k,v in get_favorited(db, u['id']).iteritems()})
   u['favorited'] = len(fd)
-  u['most_favorited'] = [{'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in fd.most_common(500)]
+  u['most_favorited'] = [{'id': i[0], 'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in fd.most_common(500)]
 
 if __name__ == '__main__':
   #print("used as library only")

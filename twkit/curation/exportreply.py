@@ -20,6 +20,8 @@
 
 import sys
 import optparse
+import dateutil.parser
+from datetime import datetime
 from collections import Counter
 from progress.bar import Bar
 from twkit.utils import *
@@ -29,13 +31,25 @@ if __name__ == '__main__':
   parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="Make noise")
   parser.add_option("-g", "--greek", action="store_true", dest="greek", default=False, help="Only get the part of the graph that is followed or marked greek")
   parser.add_option("-o", "--output", action="store", dest="filename", default='reply.txt', help="Output file")
+  parser.add_option("-b", "--before", action="store", dest="before", default=False, help="Before given date.")
+  parser.add_option("-a", "--after", action="store", dest="after", default=False, help="After given date.")
   (options, args) = parser.parse_args()
   verbose(options.verbose)
-  db, _ = init_state(use_cache=True, ignore_api=True)
+  db, _ = init_state(use_cache=False, ignore_api=True)
 
-  sys.stderr.write("initialize reply scan\n")
-  sys.stderr.flush()
-  tweets = db.tweets.find({'in_reply_to_user_id': {'$gt': 1}}, {'in_reply_to_user_id':1, 'user': 1}).sort('in_reply_to_user_id', 1)
+  criteria = {}
+  if options.before:
+    criteria['$lte'] = dateutil.parser.parse(options.before)
+  if options.after:
+    criteria['$gt'] = dateutil.parser.parse(options.after)
+
+  if verbose():
+    sys.stderr.write("initialize reply scan\n")
+    sys.stderr.flush()
+  if options.before or options.after:
+    tweets = db.tweets.find({'in_reply_to_user_id': {'$gt': 1}, 'created_at': criteria}, {'in_reply_to_user_id':1, 'user': 1}).sort('in_reply_to_user_id', 1)
+  else:
+    tweets = db.tweets.find({'in_reply_to_user_id': {'$gt': 1}}, {'in_reply_to_user_id':1, 'user': 1}).sort('in_reply_to_user_id', 1)
   num = db.tweets.count()
   if verbose():
     sys.stderr.write("starting scan\n")

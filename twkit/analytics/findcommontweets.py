@@ -6,6 +6,10 @@
 # polyvios@ics.forth.gr
 ###########################################
 
+"""
+Compute copying events, using "synchrotrap" algorithm. Used in Alex's paper.
+"""
+
 import datetime, sys, time
 from isoweek import Week
 from nltk.tokenize import TweetTokenizer
@@ -52,7 +56,7 @@ def main(firstweek, lastweek):
     if verbose(): print u"Scanning {}".format(start_date)
     edges = scan_interval(start_date)
     start_date += datetime.timedelta(seconds=Time_window/2)
-    for t, copied in edges:
+    for (t, copied) in edges:
       db.botsperweek.update_one({'id': t['id']},
         {'$set': {
           'id': t['id'],

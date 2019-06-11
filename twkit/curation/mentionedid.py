@@ -54,9 +54,7 @@ for idstr in userlist:
       print "is ignored, adding anyway"
       sys.stdout.flush()
     try:
-      db.users.update_one({'id':userid, 'screen_name': username}, {'$set': {'id':userid, 'screen_name': username}}, upsert=True)
-      print "name of mentioned user inserted into users", userid
-      db.users.update_one({'id':userid, 'screen_name_lower': username.lower()}, {'$set': {'id':userid, 'screen_name_lower': username.lower()}}, upsert=True)
+      db.users.update_one({'id':userid, 'screen_name_lower': username}, {'$set': {'id':userid, 'screen_name': username, 'screen_name_lower': username.lower()}}, upsert=True)
       print "keyname of mentioned user inserted into users", userid
       sys.stdout.flush()
     except Exception as e:

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 ###########################################
 # (c) 2016-2018 Polyvios Pratikakis
@@ -21,6 +21,7 @@ from twkit.utils import *
 if __name__ == "__main__":
   parser = optparse.OptionParser()
   parser.add_option("-w", "--wait", action="store_true", dest="wait", default=False, help="Wait until timeline requests can be made again")
+  parser.add_option("--waitfor", action="store", dest="waitfor", default=None, help="Wait until timeline requests can be made again")
   parser.add_option("-p", "--pause", action="store_true", dest="pause", default=False, help="Wait until there are no timeline requests left")
   parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="Print verbose data on all limits, not just non-full ones")
   (options, args) = parser.parse_args()
@@ -43,7 +44,22 @@ if __name__ == "__main__":
     for r in api.rate_limit.resources[d]:
       l = api.rate_limit.get_limit(r)
       if l.remaining == l.limit: continue
-      print u'{:<40} {:>3} requests left in the next {:>3} seconds'.format(r, l.remaining, l.reset - timegm(gmtime()))
+      left = l.reset - timegm(gmtime())
+      rem = l.remaining
+      if sys.stdout.isatty():
+        if left < rem:
+          rem = u'\033[93m{:>3}\033[0m'.format(rem)
+        if rem == 0:
+          rem = u'\033[91m{:>3}\033[0m'.format(rem)
+      print u'{:<40} {:>3} requests left in the next {:>3} seconds'.format(r, rem, left)
+
+  if options.waitfor:
+    d = api.rate_limit.get_limit(options.waitfor)
+    if d.remaining == 0:
+      sec = d.reset - timegm(gmtime())
+      print "waiting for", sec, "seconds"
+      sys.stdout.flush()
+      time.sleep(sec)
 
   if options.wait:
     d = api.rate_limit.get_limit('/statuses/user_timeline')

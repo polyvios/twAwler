@@ -45,6 +45,8 @@ db.lastscan.ensureIndex({'list_id': 1}, {'sparse': true})
 
 db.images.ensureIndex({'screen_name':1, 'date': 1})
 db.images.ensureIndex({'image': 1})
+
+db.vectorizequeue.ensureIndex({'id': 1})
 ===todo?===
 
 

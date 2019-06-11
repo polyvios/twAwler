@@ -21,6 +21,8 @@
 
 import sys
 import optparse
+import dateutil.parser
+from datetime import datetime
 from collections import Counter
 from progress.bar import Bar
 from twkit.utils import *
@@ -30,14 +32,27 @@ if __name__ == '__main__':
   parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="Make noise")
   parser.add_option("-g", "--greek", action="store_true", dest="greek", default=False, help="Only get the part of the graph that is followed or marked greek")
   parser.add_option("-o", "--output", action="store", dest="filename", default='retweet.txt', help="Output file")
+  parser.add_option("-b", "--before", action="store", dest="before", default=False, help="Before given date.")
+  parser.add_option("-a", "--after", action="store", dest="after", default=False, help="After given date.")
   (options, args) = parser.parse_args()
-  verbose(options.verbose)
-  db, _ = init_state(use_cache=True, ignore_api=True)
 
-  print "initialize"
+  verbose(options.verbose)
+  db, _ = init_state(use_cache=False, ignore_api=True)
+
+  criteria = {}
+  if options.before:
+    criteria['$lte'] = dateutil.parser.parse(options.before)
+  if options.after:
+    criteria['$gt'] = dateutil.parser.parse(options.after)
+
+  if verbose():
+    sys.stderr.write("initialize retweet scan\n")
+    sys.stderr.flush()
+  if options.before or options.after:
+    tweets = db.tweets.find({'retweeted_status.user.id': {'$gt': 1}, 'created_at': criteria}, {'retweeted_status.user.id':1, 'user.id':1}).sort('retweeted_status.user.id', 1)
+  else:
+    tweets = db.tweets.find({'retweeted_status.user.id': {'$gt': 1}}, {'retweeted_status.user.id':1, 'user.id':1}).sort('retweeted_status.user.id', 1)
   num = db.tweets.count()
-  print "about to scan {} total tweets for RTs".format(num)
-  tweets = db.tweets.find({'retweeted_status.user.id': {'$gt': 1}}, {'retweeted_status.user.id':1, 'user.id':1}).sort('retweeted_status.user.id', 1)
   if verbose():
     print "starting scan"
     tweets = Bar("Processing:", max=num, suffix = '%(index)d/%(max)d - %(eta_td)s').iter(tweets)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 ###########################################
 # (c) 2016-2017 Polyvios Pratikakis
@@ -89,7 +89,7 @@ def repopulate(db, api, twitterapi, uid=None, skip=False):
     for tw in q:
       i = tw['id']
       if is_suspended(db, tw['user']['id']):
-        #print "ignore suspended"
+        if verbose(): print "ignore suspended"
         continue
       if is_protected(db, tw['user']['id']):
         #print "ignore protected"

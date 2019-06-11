@@ -36,7 +36,11 @@ if __name__ == '__main__':
       criteria['deleted'] = True
     if options.lang:
       criteria['lang'] = config.lang
-    tweets =db.tweets.find(criteria).sort('id')
+    print criteria
+    tweets = db.tweets.find(criteria)
+    cnt = tweets.count()
+    if cnt > 1:
+      tweets = tweets.sort('id')
 
     for tw in tweets:
       if options.text:

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 ###########################################
 # (c) 2016-2018 Polyvios Pratikakis
@@ -20,6 +20,8 @@ from sets import Set
 import atexit
 import pprint
 import config
+from calendar import timegm
+from time import gmtime
 
 class _MyPrettyPrinter(pprint.PrettyPrinter):
   def format(self, object, context, maxlevels, level):
@@ -48,6 +50,20 @@ def tuple_add(t1, t2):
   Add two tupples, elementwise.
   """
   return tuple(map(sum, zip(t1, t2)))
+
+
+def printout_limits(db, api):
+  if api is None: return
+  if api.rate_limit is None: return
+  for d in api.rate_limit.resources:
+    for r in api.rate_limit.resources[d]:
+      l = api.rate_limit.get_limit(r)
+      db.lastlimits.update({'resource': r}, {
+        '$set': {
+          'resource': r,
+          'limit': l
+        }
+      },  upsert=True)
 
 
 def init_state(use_cache=False, ignore_api=False):
@@ -104,6 +120,7 @@ def init_state(use_cache=False, ignore_api=False):
       'susp': suspended,
       'prot': protected,
       'gr': greek }
+  atexit.register(printout_limits, db, api)
   return db, api
 
 def id_to_userstr(db, uid):
@@ -240,6 +257,9 @@ def suspend(db, uid):
   try:
     if uid is not None:
       db.suspended.update_one({'id': uid}, {'$set': {'id': uid, 'last': datetime.utcnow()}}, upsert=True)
+      u = lookup_user(db, uid)
+      if u:
+        db.users.update_one(u, {'$set': {'suspended': True}})
   except:
     print u'cannot insert suspended', uid, sys.exc_info()
   pass
@@ -251,8 +271,8 @@ def is_suspended(db, uid):
   u = db.suspended.find_one({'id': uid})
   if u != None:
     now = datetime.utcnow()
-    if 'last' not in u or u['last'] + timedelta(days=30) < now:
-      print u'User {} last seen suspended more than 30 days ago, recheck'.format(uid)
+    if 'last' not in u or u['last'] + timedelta(days=config.suspended_expiration_days) < now:
+      print u'User {} last seen suspended more than {} days ago, recheck'.format(uid, config.suspended_expiration_days)
       db.suspended.delete_one({'id': uid})
       return False
     return True
@@ -275,7 +295,7 @@ def is_protected(db, uid):
   Returns true if the given user is protected.
 
   Warning: this function is not pure!
-  If the protected user was seen to be protected more than 30 days
+  If the protected user was seen to be protected more than [config.protected_expiration_days] days
   ago, they will be marked for re-checking at the first chance.
   """
   global cache
@@ -283,8 +303,8 @@ def is_protected(db, uid):
   x = db.protected.find_one({'id': uid})
   if x != None:
     now = datetime.utcnow()
-    if x['protected'] + timedelta(days=30) < now:
-      print u'User {} last seen protected more than 30 days ago, recheck'.format(uid)
+    if x['protected'] + timedelta(days=config.protected_expiration_days) < now:
+      print u'User {} last seen protected more than {} days ago, recheck'.format(uid, config.protected_expiration_days)
       db.protected.delete_one({'id': uid})
       return False
     return True
@@ -336,9 +356,13 @@ def add_user(db, api, u):
   if oldu:
     other = db.following.find_one({'screen_name_lower': user.lower()})
     if other is not None and other['id'] != userid:
-      print "{} lost screen_name, refreshing".format(other['id'])
+      print u'{} lost screen_name, refreshing'.format(other['id'])
       add_id(db, api, other['id'])
-    db.following.update_one(oldu, {'$set': {'screen_name_lower': user.lower()}})
+    try:
+      db.following.update_one(oldu, {'$set': {'screen_name_lower': user.lower()}})
+    except:
+      print u'Cannot insert user {} into db'.format(user)
+      pass
   for us in db.users.find({'screen_name_lower': user}):
     #db.users.update(us, {'$unset': {'screen_name_lower': 1}}, multi = True)
     db.users.update_one(us, {'$unset': {'screen_name_lower': 1}})
@@ -355,7 +379,7 @@ def add_user(db, api, u):
   if 'screen_name' in j:
     j['screen_name_lower'] = j['screen_name'].lower()
   else:
-    if verbose(): print "found mysterious user"
+    if verbose(): print u'found mysterious user'
     j['screen_name'] = u'{}'.format(j['id'])
     j['screen_name_lower'] = u'{}'.format(j['id'])
   j['created_at'] = d
@@ -389,7 +413,7 @@ def handle_twitter_error(db, api, e, uid=None, waitstr=None, waitfunc=None):
   if isinstance(e.message, list):
     m = e.message[0]
     if 'code' in m and m['code'] == 179 and uid:
-      print "found protected user", uid
+      print u'found protected user', uid
       protected(db, uid)
       return False
     if 'code' in m and m['code'] == 88 and waitstr:
@@ -416,10 +440,10 @@ def handle_twitter_error(db, api, e, uid=None, waitstr=None, waitfunc=None):
       print uid, u'dead, buried'
       return False
     if 'code' in m and m['code'] == 34 and uid:
-      bury_user(db, uid)
-      print uid, u'probably dead, buried'
+      #bury_user(db, uid)
+      print uid, u'probably dead but not buried as this error is unreliable:', sys.exc_info()
       return False
-  print "couldn't handle:",
+  print u'({},{}) could not handle:'.format(uid, waitstr),
   gprint(e)
   return False
 
@@ -433,7 +457,7 @@ def add_id(db, api, uid, wait=True, force=False):
   if verbose():
     if x: print uid, u'already followed as', x['screen_name_lower']
   existing = db.users.find_one({'id': uid, 'screen_name_lower' : {'$gt': ''}})
-  if not force and existing and existing.get('timestamp_at', datetime.utcnow() - timedelta(days=45)) > datetime.utcnow() - timedelta(days=30):
+  if not force and existing and existing.get('timestamp_at', datetime.utcnow() - timedelta(days=config.user_expiration_days+1)) > datetime.utcnow() - timedelta(days=config.user_expiration_days):
     if verbose(): print u'user info crawled less than 30 days ago, skip'
     return
   try:
@@ -490,8 +514,7 @@ def add100_id(db, api, idlist):
 
 
 '''
-  adds user u (as returned by twitter api, not json dictionary) to the
-  followed users
+  adds user uid to the followed users
 '''
 def add_to_followed(db, uid, uname, protect):
   if is_dead(db, uid):
@@ -538,7 +561,7 @@ def can_follow(db, uid, refollow):
     if verbose(): print uid, u'was last seen suspended, refresh userid manually'
     return False
   if is_protected(db, uid):
-    if verbose(): print uid, u'was protected less than 30 days ago, skip'
+    if verbose(): print uid, u'was protected less than {} days ago, skip'.format(config.protected_expiration_days)
     return False
   return True
 
@@ -575,7 +598,7 @@ def follow_user(db, api, uid=None, uname=None, wait=False, refollow=False):
 def is_recently_scanned(db, uid, scantype):
   now = datetime.utcnow()
   last = db.lastscan.find_one({'id': uid, 'action': scantype})
-  if last != None and last['date'] + timedelta(days=30) > now:
+  if last != None and last['date'] + timedelta(days=config.recent_scan_days) > now:
     return last['date']
   return None
 
