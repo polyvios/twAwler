@@ -99,18 +99,6 @@ def save_csv(db, userids, filename):
   return
 
 
-def save_dot(db, graph, filename):
-  with open(filename, 'w') as dotfile:
-    dotfile.writeln("digraph {")
-    for uid in graph:
-      n1 = id_to_userstr(db, uid)
-      for i in graph[uid]:
-        n2 = id_to_userstr(db, i)
-        dotfile.writeln(u'"{}/{}" -> "{}/{}";'.format(uid, n1, i, n2))
-    dotfile.writeln("}")
-  return
-
-
 def get_userlist_followers(db, userlist, options, criteria):
   common = None
   total = frozenset()
