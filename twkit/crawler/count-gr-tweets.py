@@ -13,6 +13,7 @@ Count and print out the greek tweet count and the total tweet count
 import optparse
 from progress.bar import Bar
 from collections import Counter
+from datetime import datetime, timedelta
 from twkit.utils import *
 
 
@@ -47,6 +48,7 @@ def count_gr_tweets(db):
 
 
 if __name__ == '__main__':
+  start_time = datetime.utcnow()
   parser = optparse.OptionParser()
   parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="Make noise.")
   parser.add_option("--tracked", action="store_true", dest="tracked", default=False, help="Limit to tracked users.")
@@ -101,3 +103,7 @@ if __name__ == '__main__':
       us.get('description', '').replace('\n', ' ').replace('\r', ' ')
     ).encode('utf-8')
 
+  if options.user:
+    pass
+  else:
+    update_crawlertimes(db, "greek-tweets", start_time)

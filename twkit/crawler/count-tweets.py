@@ -10,9 +10,11 @@ Count how many tweets are in the DB per followed user.
 """
 
 import optparse
+from datetime import datetime
 from twkit.utils import *
 
 if __name__ == "__main__":
+  start_time = datetime.utcnow()
   parser = optparse.OptionParser()
   parser.add_option('-v', '--verbose', action='store_true', dest='verbose', default=False, help='List names of tracked users')
   parser.add_option('-a', '--all', action='store_true', dest='all', default=False, help='List all.')
@@ -40,3 +42,4 @@ if __name__ == "__main__":
       if u is None: continue 
     print cnt, u.get('screen_name_lower','<unknown>'), u.get('id', whoid), u.get('statuses_count')
 
+  update_crawlertimes(db, "tweets", start_time)
