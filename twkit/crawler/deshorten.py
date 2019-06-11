@@ -31,9 +31,18 @@ def deshorten_url(db, url):
     and '://eepurl.com' not in url
     and '://dlvr.it' not in url
     and '://lnkd.in' not in url
+    and '://ln.is' not in url
+    and '://gph.is' not in url
+    and '://buff.ly' not in url
+    and '://reut.rs' not in url
     and '://nyti.ms' not in url
+    and '://rol.st' not in url
+    and '://ind.pn' not in url
     and '://wp.me' not in url
     and '://fb.me' not in url
+    and '://ig.me' not in url
+    and '://is.gd' not in url
+    and '://g.co' not in url
     and '://instagr.am' not in url
     and '://trib.al' not in url
     and '://econ.trib.al' not in url
@@ -45,6 +54,7 @@ def deshorten_url(db, url):
     and '://econ.st' not in url
     and '://www.linkedin.com/slink?code=' not in url
     and '://sml.lnk.to' not in url
+    and '://go.shr.lc' not in url
     #and '://feeds.feedburner.com/~r' not in url
     #and '://smarturl.it' not in url
   ):
@@ -87,7 +97,10 @@ if __name__ == '__main__':
   parser.add_option('-v', '--verbose', action='store_true', dest='verbose', default=False, help='Make noise.')
   parser.add_option('-t', '--tweets', action='store_true', dest='tweets', default=False, help='Look up and resolve urls in tweets.')
   parser.add_option('-u', '--user', action='store', dest='user', default=None, help='Only handle urls for the given user.')
+  parser.add_option("-f", "--force", action="store_true", dest="force", default=False, help="Rescan anyway.")
   parser.add_option('--id', action='store_true', dest='ids', default=False, help='Input is user id.')
+  parser.add_option("--skip", action="store", dest="skip", type="int", default=0, help="Restart from index")
+  parser.add_option("--stopafter", action="store", dest="stopafter", type="int", default=0, help="Stop after scanning how many")
   (options, args) = parser.parse_args()
 
   verbose(options.verbose)
@@ -100,11 +113,20 @@ if __name__ == '__main__':
       sys.exit(1)
   if options.tweets:
     if options.user:
-      cursor = db.tweets.find({'user.id': u['id'], 'urls': {'$ne': None}, 'deshorten': None}).batch_size(2)
+      if options.force:
+        cursor = db.tweets.find({'user.id': u['id'], 'urls': {'$ne': None}}).batch_size(2)
+      else:
+        cursor = db.tweets.find({'user.id': u['id'], 'urls': {'$ne': None}, 'deshorten': None}).batch_size(2)
     else:
       cursor = db.tweets.find({'urls': {'$ne': None}, 'deshorten': None}).batch_size(2)
+    if options.skip:
+      cursor = cursor.skip(options.skip)
+    count = db.tweets.count()
+    if options.stopafter:
+      cursor = cursor.limit(options.stopafter)
+      count = options.stopafter
     if verbose():
-      cursor = Bar('Loading:', max=db.tweets.count(), suffix = '%(index)d/%(max)d - %(eta_td)s').iter(cursor)
+      cursor = Bar('Loading:', max=count, suffix = '%(index)d/%(max)d - %(eta_td)s').iter(cursor)
     for t in cursor:
       out_urls = []
       if 'urls' not in t or t['urls'] is None: continue
