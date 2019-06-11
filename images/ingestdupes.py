@@ -26,21 +26,25 @@ for link in sys.argv[1:]:
 
   x = db.images.find_one({'screen_name': link_name, 'date': d})
   if x is None:
-    print ".",
+    print "{} not added when crawling!".format(link)
   else:
-    print "!",
-    #gprint(x)
+    #print "!",
+    pass
 
+  #gprint(
   db.images.update_one(
     {'screen_name': link_name, 'date': d},
     {'$set': {'screen_name': link_name, 'date': d, 'image': linked}},
     upsert=True
   )
+  #.raw_result)
+  #gprint(
   db.images.update(
-    {'image': link_name},
+    {'image': link},
     {'$set': {'image': linked}},
     multi=True
   )
+  #)
 
   if linked_name != link_name:
     print "Same avatar: {} -> {}".format(link_name, linked_name)
