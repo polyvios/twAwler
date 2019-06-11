@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2019 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -16,6 +16,7 @@ Currently extracts 6 kinds of relations:
   * retweet: weighted, directed graph
   * quote: weighted, directed graph
   * listsim: weighted, undirected graph
+  * avatar: undirected graph
 
 Currently extracts around 2000 features per user.
 """
@@ -24,7 +25,7 @@ __author__       = 'Polyvios Pratikakis'
 __email__        = 'polyvios@ics.forth.gr'
 __copyright__    = 'Copyright (c) 2016-present Polyvios Pratikakis, FORTH-ICS'
 __license__      = 'Apache License 2.0'
-__version__      = '0.0.1'
+__version__      = '0.0.2'
 __url__          = 'https://github.com/polyvios/twAwler'
 __description__  = 'A Twitter API crawler and feature extraction library'
 
