@@ -20,7 +20,8 @@ from twkit import *
 import config
 
 Time_window = 600 # in seconds
-Threshold = 0.8 #80% bag-of-words jaccard similarity
+#Threshold = 0.8 #80% bag-of-words jaccard similarity
+Threshold = 0.7 #70% bag-of-words jaccard similarity
 TwTk = TweetTokenizer()
 db, _ = init_state(use_cache=False, ignore_api=True)
 
