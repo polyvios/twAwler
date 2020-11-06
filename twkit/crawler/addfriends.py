@@ -21,38 +21,38 @@ def addfriends(db, api, uid, force=False, updateusers=True):
   last = db.lastscan.find_one({'id': uid, 'action': 'friends'})
   now = datetime.utcnow()
   if not force and last != None and last['date'] + timedelta(days=100) > now:
-    print "already scanned during last 100 days"
+    print("already scanned during last 100 days")
     return
   nextc = -1
   friends = [0]
   while len(friends):
     try:
       nextc, prevc, friends = api.GetFriendsPaged(user_id=uid, cursor=nextc, skip_status=True)
-      print u'.',
+      print(u'.', end=' ')
       sys.stdout.flush()
       for u in friends:
         db.follow.insert_one({'id': uid, 'follows': u.id, 'date': now})
         if updateusers: add_user(db, api, u)
     except twitter.TwitterError as e:
       if handle_twitter_error(db, api, e, uid, 'friends/list', None):
-        print u'got exception, retrying'
+        print(u'got exception, retrying')
         continue
       return
     except:
-      print u'other exception: {}'.format(sys.exc_info())
+      print(u'other exception: {}'.format(sys.exc_info()))
       return
   db.lastscan.update_one(
     {'id': uid, 'action': 'friends'},
     {'$set': {'date': now}},
     upsert=True)
-  print u'done'
+  print(u'done')
 
 
 def addfriendids(db, api, uid, wait=False, addusers=False):
   last = db.lastscan.find_one({'id': uid, 'action': 'friends'})
   now = datetime.utcnow()
   if last != None and last['date'] + timedelta(days=100) > now:
-    print "already scanned during last 100 days"
+    print("already scanned during last 100 days")
     return
   try:
     cursor = api.GetFriendIDs(user_id=uid)
@@ -62,7 +62,7 @@ def addfriendids(db, api, uid, wait=False, addusers=False):
     return
   except:
     return
-  print u'got {}'.format(len(cursor)),
+  print(u'got {}'.format(len(cursor)), end=' ')
   sys.stdout.flush()
   for userid in cursor:
     db.follow.insert_one({'id': uid, 'follows': userid, 'date': now})
@@ -72,7 +72,7 @@ def addfriendids(db, api, uid, wait=False, addusers=False):
     {'id': uid, 'action': 'friends'},
     {'$set': {'date': now}},
     upsert=True)
-  print u'done'
+  print(u'done')
 
 
 if __name__ == '__main__':
@@ -96,12 +96,12 @@ if __name__ == '__main__':
     userlist = [x.lower().replace("@", "") for x in args]
   for user in userlist:
     uname = None if options.ids else user
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     u = lookup_user(db, uid, uname)
-    print "Get {} friends".format(u.get('screen_name_lower', user)),
+    print("Get {} friends".format(u.get('screen_name_lower', user)), end=' ')
     sys.stdout.flush()
     if is_ignored(db, u['id']):
-      print "skip ignored user", uname, uid
+      print("skip ignored user", uname, uid)
       continue
     if options.full:
       addfriends(db, api, u['id'], force=options.force, updateusers=options.updateusers)

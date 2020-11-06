@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -16,10 +16,10 @@ if __name__ == '__main__':
   db, api = init_state(ignore_api=True)
 
   if len(sys.argv) < 2:
-    print "Usage: {} <ids>".format(sys.argv[0])
+    print("Usage: {} <ids>".format(sys.argv[0]))
     sys.exit(1)
 
   userlist = sys.argv[1:]
   for useridstr in userlist:
-    userid = long(useridstr)
+    userid = int(useridstr)
     bury_user(db, userid)

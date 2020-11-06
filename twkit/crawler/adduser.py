@@ -1,7 +1,7 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -32,7 +32,7 @@ if __name__ == "__main__":
   if options.ids and len(args) > 100:
     idlist = []
     for idstr in args:
-      userid = long(idstr)
+      userid = int(idstr)
       if not can_follow(db, userid, options.refollow): continue
       idlist.append(userid)
       if len(idlist) > 99:
@@ -48,6 +48,6 @@ if __name__ == "__main__":
   else:
     for user in userlist:
       if options.ids:
-        follow_user(db, api, uid=long(user), wait=True, refollow=options.refollow)
+        follow_user(db, api, uid=int(user), wait=True, refollow=options.refollow)
       else:
         follow_user(db, api, uname=user, wait=True, refollow=options.refollow)

@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -46,7 +46,7 @@ def load_past(db, api, u, max_req=-1):
   count = 0
   flag = is_greek(db, uid)
   posts = []
-  print "Past {:<20}".format(uname),
+  print("Past {:<20}".format(uname), end = ' ')
   sys.stdout.flush()
   while max_req != 0:
     max_req -= 1
@@ -55,16 +55,16 @@ def load_past(db, api, u, max_req=-1):
         trim_user=True,
         max_id=minid,
         count=200)
-      print ".",
+      print(". ", end='')
       sys.stdout.flush()
     except twitter.TwitterError as e:
-      print "exception for", uname, e, uid,
+      print("exception {} for {}/{} ".format(e, uname, uid), end='')
       repeatf = lambda x: load_past(db, api, u, max_req)
       handle_twitter_error(db, api, e, uid, 'statuses/user_timeline', repeatf)
-      print ""
+      print("")
       return
     except:
-      print "some other error, retrying",sys.exc_info()[0],
+      print("some other error, retrying ",sys.exc_info()[0], end='')
       sys.stdout.flush()
       time.sleep(1)
       continue
@@ -89,7 +89,7 @@ def load_past(db, api, u, max_req=-1):
       try:
         bulk.insert(j)
       except:
-        print "some issue", j, sys.exc_info()[0]
+        print("some issue", j, sys.exc_info()[0])
         sys.stdout.flush()
         pass
       if minid == None or earliestdate == None or s.id < minid:
@@ -113,9 +113,9 @@ def load_past(db, api, u, max_req=-1):
         upsert = True)
 
   if(count > 0):
-    print "Found", count, "tweets" if flag else "NON-GR tweets"
+    print("Found", count, "tweets" if flag else "NON-GR tweets")
   else:
-    print "no tweets found"
+    print("no tweets found")
   sys.stdout.flush()
   if minid != None:
     db.crawlerdata.update_one(
@@ -149,12 +149,12 @@ if __name__ == '__main__':
   else:
     userlist = [x.lower().replace("@", "") for x in args]
     for user in userlist:
-      uid = long(user) if options.ids else None
+      uid = int(user) if options.ids else None
       uname = None if options.ids else user
       x = get_tracked(db, uid=uid, uname=uname)
       if x:
         load_past(db, api, x, max_req=options.req)
       else:
-        if verbose(): print "Unknown user", uname, uid, x, "first add user for tracking. Abort."
+        if verbose(): print("Unknown user", uname, uid, x, "first add user for tracking. Abort.")
         sys.stdout.flush()
 

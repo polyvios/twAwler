@@ -35,9 +35,16 @@ for x in Bar("Lookup:", suffix = '%(index)d/%(max)d - %(eta_td)s').iter(sys.argv
 print idlist
 bulk = db.tweets.initialize_unordered_bulk_op()
 cursor = api.statuses_lookup(id_=idlist, trim_user=True)
+found_at_least_one = False
 for tweet in Bar("Tweets:", suffix = '%(index)d/%(max)d - %(eta_td)s').iter(cursor):
   j1 = tweet._json
   tw = twitter.Status.NewFromJsonDict(j1)
   j2 = pack_tweet(db, tw)
   bulk.find({'id': j2['id']}).upsert().update({'$set': j2})
-bulk.execute()
+  idlist.remove(j2['id'])
+  found_at_least_one = True
+
+if found_at_least_one:
+  bulk.execute()
+
+print "Remaining, probably deleted: {}".format(idlist)

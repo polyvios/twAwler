@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -22,14 +22,16 @@ def pull_favorited(db, api, twitterapi):
   favs = db.favorites.find({'pulled': None}).batch_size(100)
   idlist = []
   if verbose():
-    favs = Bar("Processing:", max=favs.count(), suffix = '%(index)d/%(max)d - %(eta_td)s').iter(favs)
+    c = favs.count()
+    if c == 0: c += 1
+    favs = Bar("Processing:", max=c, suffix = '%(index)d/%(max)d - %(eta_td)s').iter(favs)
   for f in favs:
     twid = f['tweet_id']
     if db.tweets.find_one({'id': twid}) is not None:
       db.favorites.update(f, {'$set': {'pulled': True}})
       continue
     idlist.append(twid)
-    if verbose(): print " ", twid
+    if verbose(): print(" ", twid)
     if len(idlist) == 100:
       add100(db, api, twitterapi, idlist)
       idlist = []
@@ -50,7 +52,7 @@ def pull_replied(db, api, twitterapi):
     twid = t['in_reply_to_status_id']
     if twid is None:
       db.tweets.update(t, {'$unset': {'in_reply_to_status_id': 1}})
-      print "point 1: this should never? be reached, i think"
+      print("point 1: this should never? be reached, i think")
       continue
     #if get_tracked(db, uid=t['user']['id']) is None or not is_greek(db, uid=t['user']['id']): continue
     orig = db.tweets.find_one({'id': twid})
@@ -61,7 +63,7 @@ def pull_replied(db, api, twitterapi):
           db.tweets.update({'id': twid}, {'$set': {'user.id': t['in_reply_to_user_id']}})
       continue
     idlist.append(twid)
-    if verbose(): print " ", twid
+    if verbose(): print(" ", twid)
     if len(idlist) == 100:
       add100(db, api, twitterapi, idlist)
       idlist = []
@@ -80,7 +82,7 @@ def pull_quoted(db, api, twitterapi):
     twid = t['quoted_status_id']
     if twid is None:
       db.tweets.update(t, {'$unset': {'quoted_status_id': 1}})
-      print "point 1: this should never? be reached, i think"
+      print("point 1: this should never? be reached, i think")
       continue
     #if get_tracked(db, uid=t['user']['id']) is None or not is_greek(db, uid=t['user']['id']): continue
     orig = db.tweets.find_one({'id': twid})
@@ -88,12 +90,12 @@ def pull_quoted(db, api, twitterapi):
       if 'quoted_status' not in t:
         del orig['_id']
         db.tweets.update_one(t, {'$set' : { 'quoted_status' : orig }})
-        if verbose(): print u"filled in tweet {} into {}".format(twid, t['id'])
+        if verbose(): print(u"filled in tweet {} into {}".format(twid, t['id']))
       db.tweets.update(t, {'$set': {'quote_pulled': True}})
       continue
     if twid not in idlist:
       idlist.append(twid)
-    if verbose(): print " ", twid
+    if verbose(): print(" ", twid)
     if len(idlist) >= 100:
       add100(db, api, twitterapi, idlist)
       idlist = []

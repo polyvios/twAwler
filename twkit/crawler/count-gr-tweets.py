@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -64,9 +64,9 @@ if __name__ == '__main__':
     userlist = []
     for uname in args:
       if options.tracked:
-        u = get_tracked(db, long(uname), None) if options.ids else get_tracked(db, None, uname)
+        u = get_tracked(db, int(uname), None) if options.ids else get_tracked(db, None, uname)
       else:
-        u = lookup_user(db, long(uname), None) if options.ids else lookup_user(db, None, uname)
+        u = lookup_user(db, int(uname), None) if options.ids else lookup_user(db, None, uname)
       if u is None:
         if verbose():
           sys.stderr.write(u'user {} missing\n'.format(uname))
@@ -93,15 +93,15 @@ if __name__ == '__main__':
       continue
     #elcounter = db.tweets.find({'user.id': uid, 'lang': config.lang, 'retweeted_status': None}).count()
     elcounter = db.tweets.find({'user.id': uid, 'lang': config.lang}).count()
-    print u'{} {} {} {} {} '.format(
+    print(u'{} {} {} {} {} '.format(
       uid, id_to_userstr(db, uid),
       elcounter, counter, 1.0*elcounter/max(counter,1)
-    ).encode('utf-8'),
+    ).encode('utf-8'), end='')
     us = lookup_user(db, uid=uid)
-    print u'{} {} {}'.format(us.get('name',"").replace('\n', ' '),
+    print(u'{} {} {}'.format(us.get('name',"").replace('\n', ' '),
       us.get('location', '').replace('\n', ' ').replace('\r', ' '),
       us.get('description', '').replace('\n', ' ').replace('\r', ' ')
-    ).encode('utf-8')
+    ).encode('utf-8'))
 
   if options.user:
     pass

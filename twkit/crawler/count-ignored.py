@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -36,12 +36,12 @@ if __name__ == "__main__":
       whoid = c['_id']
       cnt = c['count']
       if not is_ignored(db, whoid):
-        print "Impossible! {} - {}/{}".format(u['id'], whoid, id_to_userstr(db, whoid))
+        print("Impossible! {} - {}/{}".format(u['id'], whoid, id_to_userstr(db, whoid)))
         continue
       if is_protected(db, whoid):
-        print "{}/{} is both protected and ignored".format(whoid, id_to_userstr(db, whoid))
+        print("{}/{} is both protected and ignored".format(whoid, id_to_userstr(db, whoid)))
       u = lookup_user(db, whoid)
-      print "{} {}/{}".format(cnt, id_to_userstr(db, whoid), whoid)
+      print("{} {}/{}".format(cnt, id_to_userstr(db, whoid), whoid))
       sys.stdout.flush()
   update_crawlertimes(db, "ignored", start_time)
 
@@ -53,4 +53,4 @@ if __name__ == "__main__":
   #  ])
   #  for c in cursor:
   #    cnt = c['count']
-  #    print cnt, name
+  #    print(cnt, name)

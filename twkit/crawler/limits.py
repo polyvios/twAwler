@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
 # (c) 2016-2018 Polyvios Pratikakis
@@ -35,13 +35,13 @@ if __name__ == "__main__":
       api.InitializeRateLimit()
       break
     except:
-      print sys.exc_info()
-      print "."
+      print(sys.exc_info())
+      print(".")
       time.sleep(3)
       continue
 
-  for d in api.rate_limit.resources:
-    for r in api.rate_limit.resources[d]:
+  for d in sorted(api.rate_limit.resources):
+    for r in sorted(api.rate_limit.resources[d]):
       l = api.rate_limit.get_limit(r)
       if l.remaining == l.limit: continue
       left = l.reset - timegm(gmtime())
@@ -51,13 +51,13 @@ if __name__ == "__main__":
           rem = u'\033[93m{:>3}\033[0m'.format(rem)
         if rem == 0:
           rem = u'\033[91m{:>3}\033[0m'.format(rem)
-      print u'{:<40} {:>3} requests left in the next {:>3} seconds'.format(r, rem, left)
+      print(u'{:<40} {:>3} requests left in the next {:>3} seconds'.format(r, rem, left))
 
   if options.waitfor:
     d = api.rate_limit.get_limit(options.waitfor)
     if d.remaining == 0:
       sec = d.reset - timegm(gmtime())
-      print "waiting for", sec, "seconds"
+      print("waiting for", sec, "seconds")
       sys.stdout.flush()
       time.sleep(sec)
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     d = api.rate_limit.get_limit('/statuses/user_timeline')
     if d.remaining == 0:
       sec = d.reset - timegm(gmtime())
-      print "waiting for", sec, "seconds"
+      print("waiting for", sec, "seconds")
       sys.stdout.flush()
       time.sleep(sec)
 
@@ -75,7 +75,7 @@ if __name__ == "__main__":
       req = d.remaining
       sys.stdout.flush()
       sec = req
-      print req, "requests left, waiting ", sec, "seconds for pause"
+      print(req, "requests left, waiting ", sec, "seconds for pause")
       time.sleep(sec)
       limits = api.GetRateLimitStatus()
       d = api.rate_limit('/statuses/user_timeline')

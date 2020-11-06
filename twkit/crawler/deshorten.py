@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -18,10 +18,13 @@ from subprocess import Popen, PIPE
 from twkit.utils import *
 
 def deshorten_url(db, url):
-  if ('://t.co' not in url
+  if isinstance(url, (bytes,bytearray)):
+    url = url.decode('utf-8')
+  if (  '://t.co' not in url
     and '://ift.tt' not in url
     and '://bit.ly' not in url
     and '://amzn.to' not in url
+    and '://x2t.com' not in url
     and '://goo.gl' not in url
     and '://ow.ly' not in url
     and '://ht.ly' not in url
@@ -69,15 +72,17 @@ def deshorten_url(db, url):
       if url != cached['url']:
         return deshorten_url(db, cached['url'])
 
-  args = u'wget -t 1 --user-agent=Firefox --timeout=5 --spider -S {} 2>&1 | grep ^Location | head -n 1'.format(pipes.quote(url))
+  args = u'wget -t 1 --user-agent=Firefox --timeout=5 --spider -S {} 2>&1 | grep Location | head -n 1'.format(pipes.quote(url))
   p = Popen(args, shell=True, stdout=PIPE)
-  output = p.communicate()[0]
+  output = str(p.communicate()[0], 'utf-8').strip()
+  if verbose(): print(output)
   locstrs = output.split()
+  if verbose(): print(output.split())
   if len(locstrs) >= 2:
     out_url = locstrs[1]
   #try:
     if len(out_url):
-      print u'{} -> {}'.format(url, out_url)
+      print(u'{} -> {}'.format(url, out_url))
       db.shorturl.update_one(
         {'shorturl': url},
         {'$set': {'shorturl': url, 'url': out_url}},
@@ -85,7 +90,7 @@ def deshorten_url(db, url):
       return deshorten_url(db, out_url)
   #except Exception as e:
   else:
-    print u'bad location: "{}" for url "{}"'.format(output, url).encode('utf-8')
+    print(u'bad location: "{}" for url "{}"'.format(output, url))
   db.shorturl.update_one(
     {'shorturl': url},
     {'$set': {'shorturl': url, 'url': None}},
@@ -107,10 +112,12 @@ if __name__ == '__main__':
   db, api = init_state(use_cache=False, ignore_api=True)
 
   if options.user:
-    u = lookup_user(db, uid=long(options.user)) if options.ids else lookup_user(db, uname=options.user)
+    u = lookup_user(db, uid=int(options.user)) if options.ids else lookup_user(db, uname=options.user)
     if u is None:
-      print u'unknown user', options.user
+      print(u'unknown user', options.user)
       sys.exit(1)
+    if verbose():
+      print(u'Scanning user {}/{}'.format(u['id'], u['screen_name_lower']))
   if options.tweets:
     if options.user:
       if options.force:
@@ -148,7 +155,7 @@ if __name__ == '__main__':
     cnt = cursor.count()
     if verbose():
       cursor = Bar('Loading:', max=cnt, suffix = '%(index)d/%(max)d - %(eta_td)s').iter(cursor)
-    print u'Found {}'.format(cnt)
+    print(u'Found {}'.format(cnt))
     for u in cursor:
       url = u['url']
       out_url = deshorten_url(db, url)

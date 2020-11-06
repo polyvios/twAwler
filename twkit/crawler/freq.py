@@ -16,8 +16,8 @@ from progress.bar import Bar
 from datetime import datetime, timedelta
 from twkit.utils import *
 
-now = datetime.now()
-lastmonth = now - timedelta(days=60)
+now = datetime.utcnow()
+lastmonth = now - timedelta(days=20)
 
 def process(db, i):
   userid = i['_id']
@@ -30,10 +30,10 @@ def process(db, i):
   if u == None: return
   username = u['screen_name_lower']
   if is_ignored(db, userid):
-    print "found ignored followed", userid, username
+    print( u'found ignored followed', userid, username)
     return
   if is_dead(db, userid):
-    print "found dead followed", userid, username
+    print(u'found dead followed', userid, username)
     return
   cdata = db.crawlerdata.find_one({'id' : userid})
   if cdata: latest = max(latest, cdata.get('latest', 0))
@@ -46,16 +46,16 @@ def process(db, i):
   d = datetime.utcnow() - latest
   #e = d.days * f
   e = d.total_seconds() * f / 3600
-  #print f, "tweets per hour", long(d.total_seconds()/3600), "hours since latest", e, "expected for", username, count, "tweets in", str(delta.total_seconds/3600), "days"
+  #print(f, "tweets per hour", int(d.total_seconds()/3600), "hours since latest", e, "expected for", username, count, "tweets in", str(delta.total_seconds/3600), "days")
   db.frequences.delete_one({'id': u['id']})
   db.frequences.insert({
     'id': u['id'],
     'screen_name_lower': u['screen_name_lower'],
-    'twph': long(f),
-    'hours': long(d.total_seconds()/3600),
-    'expected': long(e),
+    'twph': int(f),
+    'hours': int(d.total_seconds()/3600),
+    'expected': int(e),
     'seentw': count,
-    'seenhr': long(delta.total_seconds()/3600)
+    'seenhr': int(delta.total_seconds()/3600)
   })
  
 
@@ -80,20 +80,20 @@ def compute_user_freq(db, u, dolastyear=True):
     username = u['screen_name_lower']
     userid = u['id']
     if is_ignored(db, userid):
-      print "oops, found followed user in ignored", username
+      print("oops, found followed user in ignored", username)
     cdata = db.crawlerdata.find_one({'id' : userid})
     if cdata is None or cdata.get('latest') is None:
-      print "Missing late:", username
+      print("Missing late:", username)
       return False
     if cdata is None or cdata.get('earliest') is None:
-      print "Missing early:", username
+      print("Missing early:", username)
       db.crawlerdata.update_one({'id' : userid}, {'$set' : {'earliest': datetime.utcnow()}}, upsert=True)
       return False
     latest = cdata['latest']
     earliest = cdata['earliest']
     delta = latest - earliest
     if latest < earliest:
-      if verbose(): print "Recompute broken:", username, latest, earliest
+      if verbose(): print("Recompute broken:", username, latest, earliest)
       recompute_user_time_bounds(db, u)
       return False
     if dolastyear:
@@ -111,6 +111,7 @@ def compute_user_freq(db, u, dolastyear=True):
     return True
 
 if __name__ == '__main__':
+  start_time = datetime.utcnow()
   parser = optparse.OptionParser()
   parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="Make noise.")
   (options, args) = parser.parse_args()
@@ -121,7 +122,7 @@ if __name__ == '__main__':
   db.frequences.create_index([('expected', pymongo.DESCENDING)])
   db.frequences.create_index([('hours', pymongo.DESCENDING)])
 
-  userlist = db.following.find().batch_size(10) 
+  userlist = db.following.find().batch_size(15) 
   if verbose():
     userlist = Bar("Loading:", max=db.following.count(), suffix = '%(index)d/%(max)d - %(eta_td)s').iter(userlist)
   for u in userlist:
@@ -134,21 +135,22 @@ if __name__ == '__main__':
       db.frequences.insert({
         'id': u['id'],
         'screen_name_lower': u['screen_name_lower'],
-        'twph': long(f),
-        'hours': long(d.total_seconds()/3600),
-        'expected': long(e),
+        'twph': int(f),
+        'hours': int(d.total_seconds()/3600),
+        'expected': int(e),
         'seentw': u['seen_tweets'],
-        'seenhr': long(u['total_hours'])
+        'seenhr': int(u['total_hours'])
       })
     except:
       if verbose():
-        print "ignoring exception for {}: {}".format(u['id'], sys.exc_info())
+        print("ignoring exception for {}: {}".format(u['id'], sys.exc_info()))
       pass
  
-    #print "{} tweets per hour {} hours since latest {} expected for {} {} tweets in {} hours".format(
-    #  long(f),
-    #  long(d.total_seconds()/3600),
-    #  long(e),
+    #print("{} tweets per hour {} hours since latest {} expected for {} {} tweets in {} hours".format(
+    #  int(f),
+    #  int(d.total_seconds()/3600),
+    #  int(e),
     #  u['screen_name_lower'],
     #  u['seen_tweets'],
-    #  long(u['total_hours']))
+    #  int(u['total_hours'])))
+  update_crawlertimes(db, "frequencies", start_time)

@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -22,7 +22,7 @@ if __name__ == '__main__':
   db, api = init_state()
   userlist = [x.lower().replace("@", "") for x in args]
   for user in userlist:
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     uname = None if options.ids else user
     u = get_tracked(db, uid=uid, uname=uname)
     if u:
@@ -30,8 +30,8 @@ if __name__ == '__main__':
       db.greeks.delete_one({'id': u['id']})
       db.frequences.delete_one({'id': u['id']})
       ignore_user(db, u['id'])
-      print "stopped following, ignoring", u
+      print("stopped following, ignoring", u)
     else:
       u = lookup_user(db, uid, uname)
-      print "user not tracked, ignoring anyway", uid, uname, u['screen_name']
+      print("user not tracked, ignoring anyway", uid, uname, u['screen_name'])
       ignore_user(db, u['id'])
