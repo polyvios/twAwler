@@ -25,6 +25,7 @@ def search_for_terms(db, api, term, options, max_id=None, max_req=-1):
   while max_req != 0:
     sys.stdout.flush()
     max_req -= 1
+    lng = config.lang if options.lang else None
     try:
       posts = api.GetSearch(
         term=term.decode('utf-8'),
@@ -34,14 +35,15 @@ def search_for_terms(db, api, term, options, max_id=None, max_req=-1):
         since=options.after,
         until=options.before,
         include_entities=True,
+        lang=lng
       )
     except twitter.TwitterError as e:
-      if verbose(): print u"exception for {} {}".format(term, e).encode('utf-8')
+      if verbose(): print(u"exception for {} {}".format(term, e).encode('utf-8'))
       repeatf = lambda x: search_for_terms(db, api, term, options, max_id)
       handle_twitter_error(db, api, e, None, 'search/tweets', repeatf)
       return
     except:
-      if verbose(): print u"some other error, retrying", sys.exc_info(),
+      if verbose(): print(u"some other error, retrying ", sys.exc_info(),end = '')
       time.sleep(2)
       continue
     bulk = db.tweets.initialize_unordered_bulk_op()
@@ -49,13 +51,17 @@ def search_for_terms(db, api, term, options, max_id=None, max_req=-1):
       if max_id == None or max_id > s.id:
         max_id = s.id -1
       j = pack_tweet(db, s)
+      if options.lang and j['lang'] != config.lang:
+        if verbose():
+          print("Ignore other language tweet {} / {}".format(j['lang'], config.lang).encode('utf-8'))
+        continue
       try:
         bulk.insert(j)
         count += 1
       except:
-        if verbose(): print "some issue", j, sys.exc_info()[0]
+        if verbose(): print("some issue", j, sys.exc_info()[0])
         pass
-      if options.text: print j['text']
+      if options.text: print(j['text'])
       uid = j['user']['id']
       if options.add:
         follow_user(db, api, uid)
@@ -66,20 +72,19 @@ def search_for_terms(db, api, term, options, max_id=None, max_req=-1):
     try:
       bulk.execute()
     except BulkWriteError as bwe:
-      if verbose(): print "Errors:", bwe.message
+      if verbose(): print("Errors:", bwe.message)
       pass
     except InvalidOperation as e:
-      if verbose(): print "Invalid op:", e.message
+      if verbose(): print("Invalid op:", e.message)
       pass
     if len(posts) == 0: break
   if(count > 0):
-    print "Found {} tweets".format(count)
-    if j: print "earliest date seen: {}".format(j.get("created_at", datetime.utcnow()))
+    print("Found {} tweets".format(count))
+    if j: print("earliest date seen: {}".format(j.get("created_at", datetime.utcnow())))
   else:
-    print "no tweets found"
+    print("no tweets found")
   sys.stdout.flush()
   return
-
 
 
 if __name__ == '__main__':
@@ -87,6 +92,7 @@ if __name__ == '__main__':
   parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="Make noise")
   parser.add_option("--add", action="store_true", dest="add", default=False, help="Track all discovered users")
   parser.add_option("--text", action="store_true", dest="text", default=False, help="Print tweet text")
+  parser.add_option("--lang", action="store_true", dest="lang", default=False, help="Limit query to the configuration language")
   parser.add_option("--max-req", action="store", dest="req", type='int', default=-1, help="How many requests per term, with 100 tweets per request, max.")
   parser.add_option("-b", "--before", action="store", dest="before", default=False, help="Before given date.")
   parser.add_option("-a", "--after", action="store", dest="after", default=False, help="After given date.")
@@ -98,6 +104,6 @@ if __name__ == '__main__':
   for term in args:
     search_for_terms(db, api, term, options, max_id=None, max_req=options.req)
 
-  print "done"
+  print("done")
 
 
