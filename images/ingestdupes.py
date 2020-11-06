@@ -1,4 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+###########################################
+# (c) 2016-2020 Polyvios Pratikakis
+# polyvios@ics.forth.gr
+###########################################
+
 
 import os
 import sys
@@ -26,7 +32,7 @@ for link in sys.argv[1:]:
 
   x = db.images.find_one({'screen_name': link_name, 'date': d})
   if x is None:
-    print "{} not added when crawling!".format(link)
+    print("{} not added when crawling!".format(link))
   else:
     #print "!",
     pass
@@ -47,5 +53,5 @@ for link in sys.argv[1:]:
   #)
 
   if linked_name != link_name:
-    print "Same avatar: {} -> {}".format(link_name, linked_name)
+    print("Same avatar: {} -> {}".format(link_name, linked_name))
   os.remove(linkfile)
