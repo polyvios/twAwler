@@ -29,7 +29,7 @@ if __name__ == '__main__':
   #cursor = db.users.find({'screen_name_lower': {'$gt': ''}})
   cursor = (i.replace("@", "") for i in args)
   if options.ids:
-    cursor = [long(i) for i in cursor]
+    cursor = [int(i) for i in cursor]
   maxc = len(cursor)
   cursor = (lookup_user(db, i) for i in cursor)
   dates = defaultdict(lambda: Counter())

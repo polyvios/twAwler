@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -44,10 +44,10 @@ def get_gender(db, uid):
     if pos is None: continue
     for x in pos:
       if u'αρσ' in x:
-        if verbose(): print(u"male: {}".format(nextword).encode('utf-8'))
+        if verbose(): print(u"male: {}".format(nextword))
         male += 1
       if u'θηλ' in x:
-        if verbose(): print(u"female: {}".format(nextword).encode('utf-8'))
+        if verbose(): print(u"female: {}".format(nextword))
         female += 1
   total = male + female
   return {

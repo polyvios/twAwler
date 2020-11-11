@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -116,6 +116,6 @@ if __name__ == '__main__':
     u = dict(sim, **favsim)
     u['user1'] = uname1
     u['user2'] = uname2
-    gprint(u)
+    print(u)
 
 

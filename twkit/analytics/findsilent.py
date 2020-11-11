@@ -115,7 +115,7 @@ if __name__ == '__main__':
   #nfeats = len(universelist)
   #print("{} by {}".format(ndocs, nfeats))
   #print("universe of friends:")
-  #gprint([id_to_userstr(db, x) for x in universelist])
+  #print([id_to_userstr(db, x) for x in universelist])
   #print("")
   #matrix = np.array([np.in1d(universelist, list(x)) for u,x in silentusers.items()])
   #matrix = matrix.transpose()

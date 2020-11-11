@@ -216,7 +216,7 @@ class GrSentimentAnalysis(object):
     negatives = [s for s in senti_scores if s < 0]
     senti_pos = numpy.mean(positives) if len(positives) else 0
     senti_neg = numpy.mean(negatives) if len(negatives) else 0
-    #gprint(wordsleft)
+    #print(wordsleft)
     return senti_pos, senti_neg
    
 # end class
@@ -287,7 +287,7 @@ class EntityAnalysis(object):
   def dump(self):
     for key,value in self.entities.items():
       print(u'{}: seen {} times, normalized {} times '.format(key, value.count, value.count_norm).encode('utf-8'))
-      gprint(value.overlap_count)
+      print(value.overlap_count)
       print(u'---')
       
 # end class
@@ -411,7 +411,7 @@ if __name__ == '__main__':
 
   if options.onetweet:
     s = compute_sentiment(db, db.tweets.find({'id': int(args[0])}), options.entity_file)
-    gprint(s)
+    print(s)
     sys.exit(0)
 
   userlist = [x.lower().replace("@", "") for x in args]
@@ -424,7 +424,7 @@ if __name__ == '__main__':
       continue
     #user_tweets = get_user_tweets(db, u['id'], criteria)
     fill_user_sentiment(db, u, criteria, options.entity_file)
-    gprint(u)
+    print(u)
     #poscnt = {}
     #negcnt = {}
     #for (d, (senti_pos, senti_neg)) in daily_sentiment.items():

@@ -12,7 +12,6 @@ Output is edges in "quoter-id user-id" syntax: direction of "quotes" to the righ
 
 import sys
 import optparse
-import unicodecsv
 import dateutil.parser
 from collections import Counter
 from twkit.utils import *

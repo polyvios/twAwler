@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2017 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -9,13 +9,11 @@
 Compute statistics for the network formed by a given set of users.
 """
 
-import sys
 import optparse
 from datetime import datetime,timedelta
 from twkit.utils import *
 from collections import Counter, defaultdict
 from progress.bar import Bar
-import unicodecsv
 import mmap
 from igraph import *
 
@@ -77,7 +75,7 @@ if __name__ == '__main__':
   print(twitter_igraph.transitivity_undirected())
 
   print("radius:")
-  print(twitter_igraph.radius()))
+  print(twitter_igraph.radius())
   print("girth:")
   print(twitter_igraph.girth())
   print("diameter:")

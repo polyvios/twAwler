@@ -12,7 +12,6 @@ Output is edges in "retweeter-id user-id" syntax: direction of "retweets" to the
 
 import sys
 import optparse
-import unicodecsv
 import dateutil.parser
 from collections import Counter
 from twkit.utils import *
@@ -46,7 +45,7 @@ if __name__ == '__main__':
   common = None
   for user in userlist:
     uname = None if options.ids else user
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     u = lookup_user(db, uid, uname)
     if u is None:
       if verbose(): sys.stderr.write(u'Unknown user {}\n'.format(user))

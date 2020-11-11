@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -12,7 +12,7 @@ retry: use max_daily_intervals.
 
 import sys
 import optparse
-import unicodecsv
+import csv
 from twkit import *
 from twkit.utils import *
 
@@ -33,11 +33,10 @@ hours = [0, 1, 2, 3, 4, 5, 18, 19, 20, 21, 22, 23]
 
 def save_owls(db, filename, greek_only):
   with open(filename, 'w') as csvfile:
-    vectorwriter = unicodecsv.DictWriter(csvfile,
+    vectorwriter = csv.DictWriter(csvfile,
       fieldnames=fieldnames,
       restval='',
-      encoding='utf-8',
-      quoting=unicodecsv.QUOTE_MINIMAL)
+      quoting=csv.QUOTE_MINIMAL)
 
     vectorwriter.writeheader()
     uservectors = db.uservectors.find({},
@@ -76,3 +75,4 @@ if __name__ == '__main__':
   verbose(options.verbose)
 
   save_owls(db, 'nightowls.csv', options.greek)
+

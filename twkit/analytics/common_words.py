@@ -13,7 +13,6 @@ from twkit.analytics.stats import *
 from twkit.analytics.senti import *
 #from group import *
 from twkit.analytics.gender import get_gender
-import unicodecsv
 
 if __name__ == '__main__':
   parser = optparse.OptionParser()
@@ -35,7 +34,7 @@ if __name__ == '__main__':
     userlist = Bar("Processing:", max=len(userlist), suffix = '%(index)d/%(max)d - %(eta_td)s').iter(userlist)
   for user in userlist:
     now = datetime.utcnow()
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     uname = None if options.ids else user
     x = lookup_user(db, uid, uname)
     vect = db.uservectors.find_one({'id': x['id']})
@@ -45,4 +44,4 @@ if __name__ == '__main__':
     #word_count += Counter({d['word']: d['count'] for d in vect.get('most_common_words')})
 
   for w in sorted(word_count):
-    print(u'{}\t{}'.format(word_count[w], w)encode('utf-8'))
+    print(u'{}\t{}'.format(word_count[w], w))

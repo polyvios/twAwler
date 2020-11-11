@@ -12,7 +12,6 @@ Output is edges in "follower-id user-id" syntax: direction of "follow" to the ri
 
 import sys
 import optparse
-import unicodecsv
 import dateutil.parser
 from twkit.utils import *
 

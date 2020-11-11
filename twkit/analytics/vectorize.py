@@ -18,7 +18,7 @@ from twkit.utils import *
 from twkit.analytics.stats import *
 from twkit.analytics.senti import *
 from twkit.analytics.gender import get_gender
-import unicodecsv
+import csv
 import json
 
 def vectorize_func(db, u, criteria, entity_file):
@@ -180,12 +180,12 @@ if __name__ == '__main__':
 
   vectorwriter = None
   if options.filename:
-    vectorwriter = unicodecsv.DictWriter(open(options.filename, 'a'),
+    vectorwriter = csv.DictWriter(open(options.filename, 'a'),
       fieldnames=user_metadata_attrs + usage_times_attrs +
         follower_stats_attrs + word_stats_attrs +
         user_sentiment_attrs + favoriter_attrs + ['lexical_gender', 'vector_timestamp'],
       #restval='ignore',
-      encoding='utf-8')
+      )
     vectorwriter.writeheader()
   for user in userlist:
     now = datetime.utcnow()

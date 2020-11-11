@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -55,11 +55,11 @@ if __name__ == '__main__':
   for user in userlist:
     if options.tweet:
       if options.quotes:
-        explore_quote_thread(db, long(user))
+        explore_quote_thread(db, int(user))
       else:
-        explore_thread(db, long(user))
+        explore_thread(db, int(user))
       continue
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     uname = None if options.ids else user
     u = lookup_user(db, uid, uname)
 
