@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2017 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -21,9 +21,7 @@ from twkit.analytics.senti import get_word_graph
 tknzr = TweetTokenizer(strip_handles=True, reduce_len=True)
 
 def match_cases(word1pos, word2pos):
-  #gprint(word1pos)
-  #gprint(word2pos)
-  #print "----"
+  #print(u"----")
   res1 = []
   res2 = []
   for v in word2pos[1]:
@@ -34,9 +32,7 @@ def match_cases(word1pos, word2pos):
       res2.append(v)
    #match1 = any(x in word1pos for x in word2pos)
   #match2 = any(x in word2pos for x in word1pos)
-  #print "matching:", match1, match2
-  #gprint(word1pos)
-  #gprint(word2pos)
+  #print(u"matching:", match1, match2)
   r1 = word1pos
   r2 = word2pos
   if len(res1):
@@ -57,27 +53,25 @@ def process_sentence(sentence):
 def get_entities(db, uid, limit):
   tweets = get_user_tweets(db, uid, None)
   if limit:
-    print limit
+    print(limit)
     tweets = tweets.limit(int(limit))
   for t in tweets:
     if 'retweeted_status' in t: continue
     if 'text' not in t: continue
     txt = t['text']
-    print txt.encode('utf-8')
+    print(txt.encode('utf-8'))
     sentence = []
     for w in tknzr.tokenize(txt):
       pos = get_word_graph().get_pos(w)
-      #print u"{}".format(w).encode('utf-8'),
-      #if pos: gprint(pos)
-      #print u"----"
+      #print(u"----")
       if pos is not None and u'Συν' in pos:
         process_sentence(sentence)
-        gprint(sentence)
+        print(sentence)
         sentence = []
       else:
         sentence.append((w, pos))
     process_sentence(sentence)
-    gprint(sentence)
+    print(sentence)
   return 
 
 
@@ -99,18 +93,18 @@ if __name__ == '__main__':
         pos = get_word_graph().get_pos(w)
         if pos is not None and u'Συν' in pos:
           process_sentence(sentence)
-          gprint(sentence)
+          print(sentence)
           sentence = []
         else:
           sentence.append((w, pos))
       process_sentence(sentence)
-      gprint(sentence)
+      print(sentence)
     sys.exit(0) 
 
   db, _ = init_state(use_cache=False, ignore_api=True)
   userlist = [x.lower().replace("@", "") for x in args]
   for user in userlist:
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     uname = None if options.ids else user
     u = get_tracked(db, uid, uname)
     if u == None:
@@ -118,7 +112,7 @@ if __name__ == '__main__':
       if x:
         u = { 'id': x['id'], 'screen_name_lower': x['screen_name'].lower() }
       else:
-        print "unknown user:", uid, uname
+        print("unknown user:", uid, uname)
         continue
     #user_tweets = get_user_tweets(db, u['id'], None)
     get_entities(db, u['id'], options.limit)
