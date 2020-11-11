@@ -1,7 +1,7 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2019 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -24,28 +24,27 @@ import json
 def vectorize_func(db, u, criteria, entity_file):
   if u == None: return
   now = datetime.utcnow()
-  if verbose(): print now.isoformat(), u['id'], u['screen_name']
-  if verbose(): print "{} Getting tweets".format(datetime.utcnow()),
+  if verbose(): print(now.isoformat(), u['id'], u['screen_name'])
+  if verbose(): print("{} Getting tweets".format(datetime.utcnow()), end=' ')
   user_tweets = get_user_tweets(db, u['id'], criteria)
-  if verbose(): print "{} Loading metadata".format(datetime.utcnow())
+  if verbose(): print("{} Loading metadata".format(datetime.utcnow()))
   fill_metadata_stats(db, u)
-  if verbose(): print "{} Computing lexical".format(datetime.utcnow())
+  if verbose(): print("{} Computing lexical".format(datetime.utcnow()))
   fill_word_stats(db, u, criteria)
-  if verbose(): print "{} Computing graph".format(datetime.utcnow())
+  if verbose(): print("{} Computing graph".format(datetime.utcnow()))
   fill_follower_stats(db, u)
-  if verbose(): print "{} Computing temporal".format(datetime.utcnow())
+  if verbose(): print("{} Computing temporal".format(datetime.utcnow()))
   usage_times_stats(db, u, criteria)
-  if verbose(): print "{} Computing sentiment".format(datetime.utcnow())
+  if verbose(): print("{} Computing sentiment".format(datetime.utcnow()))
   daily_entity_sentiment = fill_user_sentiment(db, u, criteria, entity_file)
-  if verbose(): print "{} Compute user self-reference gender".format(datetime.utcnow())
+  if verbose(): print("{} Compute user self-reference gender".format(datetime.utcnow()))
   u['lexical_gender'] = get_gender(db, u['id'])
-  if verbose(): print "{} Compute favorite graph features".format(datetime.utcnow())
+  if verbose(): print("{} Compute favorite graph features".format(datetime.utcnow()))
   fill_favoriter_stats(db, u)
-  if verbose(): print "{} Done, timestamping and saving".format(datetime.utcnow())
+  if verbose(): print("{} Done, timestamping and saving".format(datetime.utcnow()))
   u['vector_timestamp'] = now
   if '_id' in u: del u['_id']
-  if verbose():
-    gprint(u)
+  if verbose(): print(u)
   db.uservectors.update({'id': u['id']}, {'$set': u}, upsert=True)
 
 
@@ -61,7 +60,7 @@ fields = [
 def flatten_dict(key, value):
   if type(value) is dict:
     r = {}
-    for k, v in value.iteritems():
+    for k, v in value.items():
       r.update(flatten_dict(u'{}_{}'.format(key, k), v))
     return r
   elif type(value) is list:
@@ -97,14 +96,14 @@ if __name__ == '__main__':
 
   db, api = init_state(False, False)
 
-  if verbose(): print u"{} start".format(datetime.utcnow())
+  if verbose(): print(u"{} start".format(datetime.utcnow()))
 
   if options.purge:
     if (raw_input("sure? (y/n)") == 'y'):
       x = db.uservectors.delete_many({})
-      print "deleted ", x.deleted_count
+      print("deleted ", x.deleted_count)
     else:
-      print "aborted"
+      print("aborted")
     sys.exit(0)
 
   criteria = {}
@@ -117,8 +116,7 @@ if __name__ == '__main__':
     q = {}
     if options.query:
       q = json.loads(options.query)
-      if verbose():
-        gprint(q)
+      if verbose(): print(q)
     it = db.uservectors.find(q, {'id':1}).sort('id', 1)
     if options.skip > 0:
       it = it.skip(options.skip)
@@ -128,7 +126,7 @@ if __name__ == '__main__':
     #options.ids = True
   elif options.queue:
     if options.dumpgraph:
-      print "Save and queue options are incompatible. Aborting."
+      print("Save and queue options are incompatible. Aborting.")
       sys.exit(2)
     userlist = (x['id'] for x in db.vectorizequeue.find())
     #options.ids = True
@@ -137,7 +135,7 @@ if __name__ == '__main__':
     for x in args:
       x = x.lower().replace("@", "")
       if options.ids:
-        u = long(x)
+        u = int(x)
       else:
         u = get_tracked(db, uname=x)
         if u is None:
@@ -146,7 +144,7 @@ if __name__ == '__main__':
         if u is not None: 
           u = u.get('id')
         else:
-          print u'Unknown user {}'.format(x)
+          print(u'Unknown user {}'.format(x))
       if u: userlist.append(u)
 
   userlist = list(userlist)
@@ -191,13 +189,13 @@ if __name__ == '__main__':
     vectorwriter.writeheader()
   for user in userlist:
     now = datetime.utcnow()
-    uid = long(user) # if options.ids else None
+    uid = int(user) # if options.ids else None
     #uname = None if options.ids else user
     x = lookup_user(db, uid)
     if x and 'screen_name' in x:
       u = { 'id': x['id'], 'screen_name': x['screen_name'] }
     else:
-      print "Skipping unknown user:", uid, uname
+      print("Skipping unknown user:", uid)
       continue
     if options.greek and not is_greek(db, u['id']): continue
     if not options.save:
@@ -205,10 +203,10 @@ if __name__ == '__main__':
       if vect and not options.force:
         if vect['vector_timestamp'] + timedelta(days=30) > now: 
           if verbose():
-            print "Found cached version produced less than a month ago, skip"
-          u = db.uservectors.find_one({'id': long(u['id'])})
+            print("Found cached version produced less than a month ago, skip")
+          u = db.uservectors.find_one({'id': int(u['id'])})
         else:
-          print "Found stale cached version, recompute"
+          print("Found stale cached version, recompute")
           vectorize_func(db, u, criteria, options.entity_file)
           u = db.uservectors.find_one({'id': u['id']})
       else:
@@ -217,7 +215,7 @@ if __name__ == '__main__':
     else:
       u = db.uservectors.find_one({'id': u['id']})
     if u is None:
-      print "No user vector to save:", user
+      print("No user vector to save:", user)
     else:  
       if '_id' in u: del u['_id']
       if vectorwriter:

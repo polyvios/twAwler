@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2017-2018 Polyvios Pratikakis
+# (c) 2017-2020 Polyvios Pratikakis
 # based on initial design by Alex Shevtsov
 # polyvios@ics.forth.gr
 ###########################################
@@ -20,9 +20,8 @@ from twkit import *
 import config
 
 Time_window = 600 # in seconds
-#Threshold = 0.8 #80% bag-of-words jaccard similarity
-Threshold = 0.7 #70% bag-of-words jaccard similarity
-TwTk = TweetTokenizer()
+Threshold = 0.8 #80% bag-of-words jaccard similarity
+TwTk = TweetTokenizer(strip_handles=True)
 db, _ = init_state(use_cache=False, ignore_api=True)
 
 
@@ -49,12 +48,13 @@ def scan_interval(start_date):
   return edges
 
 
-def main(firstweek, lastweek):
-  start_date = datetime.datetime.combine(firstweek.monday(), datetime.time())
-  lastweek += 1 # lastweek is given inclusive, increase by one to get start of following week
-  end_date = datetime.datetime.combine(lastweek.monday(), datetime.time()) + datetime.timedelta(seconds=Time_window/2)
+#def main(firstweek, lastweek):
+def main(start_date, end_date):
+  #start_date = datetime.datetime.combine(firstweek.monday(), datetime.time())
+  #lastweek += 1 # lastweek is given inclusive, increase by one to get start of following week
+  #end_date = datetime.datetime.combine(lastweek.monday(), datetime.time()) + datetime.timedelta(seconds=Time_window/2)
   while start_date < end_date:
-    if verbose(): print u"Scanning {}".format(start_date)
+    if verbose(): print(u"Scanning {}".format(start_date))
     edges = scan_interval(start_date)
     start_date += datetime.timedelta(seconds=Time_window/2)
     for (t, copied) in edges:
@@ -74,7 +74,7 @@ def main(firstweek, lastweek):
 if __name__ == '__main__':
   parser = optparse.OptionParser(usage=u'Usage: %prog [options]\nExample: %prog --before 2017W07 --after 2017W02')
   parser.add_option('-v', '--verbose', action='store_true', dest='verbose', default=False, help='List names of tracked users')
-  parser.add_option('-b', '--before', action='store', dest='before', default='2019W02', help='End on given isoweek, inclusive.')
+  parser.add_option('-b', '--before', action='store', dest='before', default='2019W52', help='End on given isoweek, inclusive.')
   parser.add_option('-a', '--after', action='store', dest='after', default='2006W09', help='Start on given isoweek.')
   parser.add_option('--clear', action='store_true', dest='clear', default=False, help='DELETE all previous contents of the output collection.')
   #parser.add_option('-p', '--processes', action='store', type=int, dest='processes', default=1, help='How many processes to use to parallelize.')
@@ -88,8 +88,10 @@ if __name__ == '__main__':
     db.botsperweek.delete_many({})
     sys.exit(0)
   if options.before:
-    before = Week.fromstring(options.before)
+    #before = Week.fromstring(options.before)
+    before = dateutil.parser.parse(options.before)
   if options.after:
-    after = Week.fromstring(options.after)
+    #after = Week.fromstring(options.after)
+    after = dateutil.parser.parse(options.after)
 
   main(after, before)

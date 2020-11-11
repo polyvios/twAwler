@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -17,15 +17,15 @@ import optparse
 import emoji
 from datetime import datetime
 from collections import Counter, defaultdict
-from sets import Set
 from nltk.tokenize import TweetTokenizer
 from nltk.metrics.distance import edit_distance
 import calendar
 import numpy
 import operator
-from urlparse import urlparse
+#from urlparse import urlparse
+from urllib.parse import urlparse
 from progress.bar import Bar
-from itertools import izip
+#from itertools import izip
 from twkit.utils import *
 
 usage_times_attrs = [
@@ -284,7 +284,7 @@ def usage_times_stats(db, u, criteria):
   total_seen = 0
   deleted_tweets = 0
 
-  if verbose(): print " scan tweets"
+  if verbose(): print(" scan tweets")
   for tweet in get_user_tweets(db, u['id'], criteria):
     total += 1
     if 'created_at' not in tweet: continue
@@ -328,14 +328,14 @@ def usage_times_stats(db, u, criteria):
           try:
             quotecnt[tweet['quoted_status']['user']['id']] += 1
           except:
-            print "\nerror!"
-            gprint(tweet)
+            print("\nerror!")
+            print(tweet)
         else:
-          print u"Found quoter tweet with missing quoted status: {} -> {}".format(tweet['id'], tweet['quoted_status_id'])
-          qid = long(tweet['quoted_status_id'])
+          print(u"Found quoter tweet with missing quoted status: {} -> {}".format(tweet['id'], tweet['quoted_status_id']))
+          qid = int(tweet['quoted_status_id'])
           tt = db.tweets.find_one({'id': qid})
           if tt is None:
-            print "Could not find quoted status locally"
+            print("Could not find quoted status locally")
           else:
             del tt['_id']
             db.tweets.update_one(tweet, {'$set' : { 'quoted_status_id': qid, 'quoted_status' : tt }})
@@ -344,7 +344,7 @@ def usage_times_stats(db, u, criteria):
     hcnt[d.hour] += 1
     dcnt[d.weekday()] += 1
 
-  if verbose(): print " mentions"
+  if verbose(): print(" mentions")
   mentionbycnt = Counter()
   seenmentions = 0
   user_mentions = get_user_mentions(db, u['id'], criteria)
@@ -352,13 +352,13 @@ def usage_times_stats(db, u, criteria):
     mentionbycnt[tweet['user']['id']] += 1
     seenmentions += 1
 
-  if verbose(): print " retweets"
+  if verbose(): print(" retweets")
   rtbycnt = Counter()
   user_retweets = get_user_retweets(db, u['id'], criteria)
   for tweet in user_retweets:
     rtbycnt[tweet['user']['id']] += 1
 
-  if verbose(): print " replies"
+  if verbose(): print(" replies")
   user_replies = get_user_replies(db, u['id'], criteria)
   repliedcnt = Counter()
   repliedto = Counter()
@@ -367,8 +367,8 @@ def usage_times_stats(db, u, criteria):
     if 'in_reply_to_status_id' not in tweet:
       # if the replied-to tweet is deleted, twitter doesn't populate
       # the field
-      #print "oops:",
-      #gprint(tweet)
+      #print("oops:",
+      #print(tweet)
       continue
     repliedto[tweet['in_reply_to_status_id']] += 1
   most_engaging = repliedto.most_common(1)
@@ -377,7 +377,7 @@ def usage_times_stats(db, u, criteria):
   else:
     most_engaging_tweet = None
 
-  if verbose(): print " quotes"
+  if verbose(): print(" quotes")
   user_quotes = get_user_quoted_tweets(db, u['id'], criteria)
   quotedcnt = Counter()
   quotedtw = Counter()
@@ -391,7 +391,7 @@ def usage_times_stats(db, u, criteria):
   else:
     most_quoted_tweet = None
 
-  if verbose(): print " saving"
+  if verbose(): print(" saving")
   #total = seentop + seenreplies + seenrt + seenmention
   qrange = range(0,len(usage_times_buckets_sec))
   u['seen_total'] = total_seen
@@ -485,7 +485,7 @@ def usage_times_stats(db, u, criteria):
     'med': numpy.median(replyintervals) if len(replyintervals) else None,
     'std': numpy.std(replyintervals) if len(replyintervals) else None
   }
-  maxdinterval = max_daily_interval.values()
+  maxdinterval = list(max_daily_interval.values())
   u['max_daily_interval'] = {
     'min': min(maxdinterval),
     'minday': min(max_daily_interval, key=max_daily_interval.get),
@@ -503,7 +503,7 @@ def usage_times_stats(db, u, criteria):
     'std': None
   }
   u['last_tweeted_at'] = lastday
-  lifetime = long((lastday - u['created_at']).total_seconds())
+  lifetime = int((lastday - u['created_at']).total_seconds())
   seconds = lifetime % 60
   minutes = (lifetime / 60) % 60
   hours = (lifetime / 3600) % 24
@@ -518,7 +518,7 @@ def usage_times_stats(db, u, criteria):
   }
   u['tweets_per_hour_of_day'] = [{'hour': i, 'count': hcnt[i]} for i in hcnt]
   u['tweets_per_weekday'] = [{'day': i, 'count': dcnt[i]} for i in dcnt]
-  twdinterval = tweets_per_day.values()
+  twdinterval = list(tweets_per_day.values())
   u['tweets_per_active_day'] = {
     'min': min(twdinterval) if len(twdinterval) else 0,
     'minday': min(tweets_per_day, key=tweets_per_day.get) if len(twdinterval) else 0,
@@ -534,7 +534,7 @@ def usage_times_stats(db, u, criteria):
     if startd not in tweets_per_day:
       tweets_per_day[startd] = 0  #zero the missing ones
     startd = startd + timedelta(days=1)
-  twdinterval = tweets_per_day.values() #now count all zero days
+  twdinterval = list(tweets_per_day.values()) #now count all zero days
   u['tweets_per_day'] = {
     'min': min(twdinterval) if len(twdinterval) else None,
     'minday': min(tweets_per_day, key=tweets_per_day.get) if len(twdinterval) else None,
@@ -620,23 +620,24 @@ class itertext(object):
   def __init__(self, cursor):
     self.cursor = cursor
   def __iter__(self):
-    return self
-  def next(self):
-    n = self.cursor.next()
+    return (self)
+  def __next__(self):
+    n = next(self.cursor)
     while 'text' not in n:
-      n = self.cursor.next()
+      n = next(self.cursor)
     text = n['text']
     res = re.sub(r'https?://[\S/]+', '', text, flags=re.MULTILINE)
     res = re.sub(r'@[a-zA-Z0-9_]+', '', res, flags=re.MULTILINE)
     res = re.sub(r'#\S+', '', res, flags=re.MULTILINE)
     res = re.sub(r'\b\d+\b', '', res, flags=re.MULTILINE)
     #res = re.sub('ς', 'σ', res)
-    #print text.encode('utf-8')
-    #print res.encode('utf-8')
-    #print "-----"
+    #print(text.encode('utf-8'))
+    #print(res.encode('utf-8'))
+    #print("-----")
     return res
 
 def deaccent(s):
+  assert(isinstance(s, str))
   return s \
     .replace(u'ά', u'α') \
     .replace(u'έ', u'ε') \
@@ -650,35 +651,35 @@ def deaccent(s):
 import os
 crawlerdir = os.environ['CRAWLERDIR']
 
-expletives = Set()
+expletives = set()
 with open(crawlerdir+"greekdata/expletives", "r") as f:
   for line in f:
-    expletives.add(deaccent(unicode(line, 'utf-8').strip().lower()))
-articles = Set()
+    expletives.add(deaccent(line.strip().lower()))
+articles = set()
 with open(crawlerdir+"greekdata/articles", "r") as f:
   for line in f:
-    articles.add(deaccent(unicode(line, 'utf-8').strip().lower()))
-pronouns = Set()
+    articles.add(deaccent(line.strip().lower()))
+pronouns = set()
 with open(crawlerdir+"greekdata/pronouns", "r") as f:
   for line in f:
-    pronouns.add(deaccent(unicode(line, 'utf-8').strip().lower()))
-locations = Set()
+    pronouns.add(deaccent(line.strip().lower()))
+locations = set()
 with open(crawlerdir+"greekdata/locations", "r") as f:
   for line in f:
-    locations.add(deaccent(unicode(line, 'utf-8').strip().lower()))
-negationwords = Set()
+    locations.add(deaccent(line.strip().lower()))
+negationwords = set()
 with open(crawlerdir+"greekdata/negationwords", "r") as f:
   for line in f:
-    negationwords.add(deaccent(unicode(line, 'utf-8').strip().lower()))
-emoticons = Set()
+    negationwords.add(deaccent(line.strip().lower()))
+emoticons = set()
 with open(crawlerdir+"greekdata/emoticons", "r") as f:
   for line in f:
-    emoticons.add(deaccent(unicode(line, 'utf-8').strip().lower()))
-stopwords = Set()
+    emoticons.add(deaccent(line.strip().lower()))
+stopwords = set()
 with open(crawlerdir+"greekdata/stopwords", "r") as f:
   for line in f:
     w = line.strip()
-    stopwords.add(deaccent(unicode(line, 'utf-8').strip().lower()))
+    stopwords.add(deaccent(line.strip().lower()))
 punctuation_chars = u'@![]...;:?«»"\'+-&()\\/,<>`´“”|*%…’'
 
 
@@ -795,7 +796,7 @@ def fill_word_stats(db, u, criteria):
       if 'text' in t:
         own_tweets.append({'text': t['text']})
 
-  if verbose(): print " tokenize"
+  if verbose(): print(" tokenize")
   words = [tknzr.tokenize(s) for s in itertext(iter(own_tweets))]
   wcounts = [len(s) for s in words]
 
@@ -808,7 +809,7 @@ def fill_word_stats(db, u, criteria):
   uniqrtags = len(rttagfreq)
   totalrtags = sum(rttagfreq.values())
 
-  if verbose(): print " wc"
+  if verbose(): print(" wc")
   artcnt  = 0
   proncnt = 0
   explcnt = 0
@@ -825,23 +826,23 @@ def fill_word_stats(db, u, criteria):
   capstweets = 0
 
   try:
-    if verbose(): print "  words"
+    if verbose(): print("  words")
     capstweets = sum(1 if all(w.isupper() for w in s) else 0 for s in words)
     wc = Counter(w for s in words for w in s)
     bigrams = (get_bigrams(s) for s in words)
     twstat = (get_phrase_stats(s) for s in words)
     ustat = reduce(lambda x, y: tuple(map(operator.add, x, y)), twstat)
-    if verbose(): print "  bigrams"
+    if verbose(): print("  bigrams")
     bc = Counter(b for s in bigrams for b in s)
-    if verbose(): print "  dicts"
+    if verbose(): print("  dicts")
     tuw = len(wc)
     tw = sum(wc.values())
     tu2w = len(bc)
     t2w = sum(bc.values())
-    if verbose(): print "  freqs"
+    if verbose(): print("  freqs")
     bifreq = bc
-    if verbose(): print "  pos"
-    for w,i in wc.iteritems():
+    if verbose(): print("  pos")
+    for w,i in wc.items():
       wd = deaccent(w.lower())
       if wd in expletives: explcnt += i
       if wd in articles: artcnt += i
@@ -858,7 +859,7 @@ def fill_word_stats(db, u, criteria):
 
   seen_own = len(own_tweets)
   if seen_own == 0: seen_own = 1 #for division
-  if verbose(): print " saving"
+  if verbose(): print(" saving")
   u['total_words'] = tw
   if tw == 0: tw = 1 # avoid divzero
   u['min_wptw'] = min(wcounts) if len(wcounts) else 0
@@ -1013,9 +1014,9 @@ def get_favorited(db, uid):
   favorited = defaultdict(lambda: [])
   for faved in db.favorites.find({'user_id': uid}):
     twid = faved['tweet_id']
-    tw = db.tweets.find_one({'id': twid}) 
+    tw = db.tweets.find_one({'id': twid})
     if tw is None:
-      if verbose(): print "missing tweet {}".format(twid)
+      if verbose(): print("missing tweet {}".format(twid))
       continue
     if 'user' in tw:
       twuid = tw['user']['id']
@@ -1023,10 +1024,10 @@ def get_favorited(db, uid):
   return favorited
 
 def fill_favoriter_stats(db, u):
-  f = Counter({k: len(v) for k,v in get_favoriters(db, u['id']).iteritems()})
+  f = Counter({k: len(v) for k,v in get_favoriters(db, u['id']).items()})
   u['favoriters'] = len(f)
   u['most_favoriters'] = [{'id': i[0], 'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in f.most_common(500)]
-  fd = Counter({k: len(v) for k,v in get_favorited(db, u['id']).iteritems()})
+  fd = Counter({k: len(v) for k,v in get_favorited(db, u['id']).items()})
   u['favorited'] = len(fd)
   u['most_favorited'] = [{'id': i[0], 'user': id_to_userstr(db, i[0]), 'count': i[1]} for i in fd.most_common(500)]
 
@@ -1054,7 +1055,7 @@ if __name__ == '__main__':
   db, api = init_state(True, ignore_api=True)
   userlist = [x.lower().replace("@", "") for x in args]
   for user in userlist:
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     uname = None if options.ids else user
     u = get_tracked(db, uid, uname)
     if u == None:
@@ -1062,10 +1063,10 @@ if __name__ == '__main__':
       if x:
         u = { 'id': x['id'], 'screen_name_lower': x['screen_name'].lower() }
       else:
-        print "unknown user:", uid, uname
+        print("unknown user:", uid, uname)
         continue
   #  fill_word_stats(db, u, True)
   #  fill_follower_stats(db, u, True)
     usage_times_stats(db, u, criteria, True)
-    gprint(u)
+    print(u)
 
