@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
   db, api = init_state(use_cache=False, ignore_api=True)
 
   if not (options.list or options.common or options.tweets):
-    print "use at least one of -l -c -t"
+    print("use at least one of -l -c -t")
     sys.exit(1)
 
   if options.all:
@@ -40,7 +40,7 @@ if __name__ == '__main__':
   peruser = {}
   for user in userlist:
     uname = None if options.ids else user
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     u = lookup_user(db, uid, uname)
     if u is None:
       if verbose(): sys.stderr.write(u'Unknown user {}\n'.format(user))
@@ -50,11 +50,11 @@ if __name__ == '__main__':
     if verbose(): sys.stderr.write(u'Fav graph for user {}/{}\n'.format(uid, userstr))
     favoriters = get_favoriters(db, uid)
     if options.list:
-      for faver, cnt in favoriters.iteritems():
+      for faver, cnt in favoriters.items():
         #if options.ids:
-        print u'{} {} {}'.format(faver, uid, len(cnt))
+        print(u'{} {} {}'.format(faver, uid, len(cnt)))
         #else:
-        #  print u'{} {} {}'.format(id_to_userstr(db, faver), userstr, len(cnt))
+        #  print(u'{} {} {}'.format(id_to_userstr(db, faver), userstr, len(cnt)))
     peruser[uid] = favoriters
   if options.common:
     common = None
@@ -65,18 +65,18 @@ if __name__ == '__main__':
         common = common & set(peruser[uid].keys())
     for uid in common:
       if verbose():
-        print id_to_userstr(db, uid)
+        print(id_to_userstr(db, uid))
       else:
-        print uid
+        print(uid)
     if options.tweets:
       for fid in common:
-        print u'{} has favorited:'.format(id_to_userstr(db, fid))
+        print(u'{} has favorited:'.format(id_to_userstr(db, fid)))
         for uid in peruser:
           uname = id_to_userstr(db, uid)
           for twid in peruser[uid][fid]:
             tw = db.tweets.find_one({'id': twid})
-            print u'Tweet {} by {}: {}'.format(twid, uname, tw.get('text')).encode('utf-8')
-            print u'--'
+            print(u'Tweet {} by {}: {}'.format(twid, uname, tw.get('text')).encode('utf-8'))
+            print(u'--')
 
 
 

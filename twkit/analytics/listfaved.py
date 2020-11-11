@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
   db, api = init_state(use_cache=False, ignore_api=True)
 
   #if not (options.list or options.common or options.tweets):
-    #print "use at least one of -l -c -t"
+    #print("use at least one of -l -c -t")
     #sys.exit(1)
 
   userlist = [x.lower().replace("@", "") for x in args]
@@ -36,7 +36,7 @@ if __name__ == '__main__':
   perfaved = Counter()
   for user in userlist:
     uname = None if options.ids else user
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     u = lookup_user(db, uid, uname)
     if u is None:
       if verbose(): sys.stderr.write(u'Unknown user {}\n'.format(user))
@@ -46,17 +46,17 @@ if __name__ == '__main__':
     if verbose(): sys.stderr.write(u'Faved by user {}/{}\n'.format(uid, userstr))
     favorited = get_favorited(db, uid)
     peruser[uid] = favorited
-    perfaved += Counter({x:len(c) for x,c in favorited.iteritems()})
+    perfaved += Counter({x:len(c) for x,c in favorited.items()})
     if options.list:
-      for faved, cnt in favorited.iteritems():
+      for faved, cnt in favorited.items():
         if options.ids:
-          print u'{} {} {}'.format(uid, faved, len(cnt))
+          print(u'{} {} {}'.format(uid, faved, len(cnt)))
         else:
-          print u'{} {} {}'.format(userstr, id_to_userstr(db, faved), len(cnt))
+          print(u'{} {} {}'.format(userstr, id_to_userstr(db, faved), len(cnt)))
         if options.tweets:
           for t in cnt:
             tw = db.tweets.find_one({'id':t})
-            print u'{}: {}: {}'.format(tw['id'], id_to_userstr(db, faved), tw.get('text', '<deleted>')).encode('utf-8')
+            print(u'{}: {}: {}'.format(tw['id'], id_to_userstr(db, faved), tw.get('text', '<deleted>')))
   if options.common:
     common = None
     for uid in peruser:
@@ -66,21 +66,21 @@ if __name__ == '__main__':
         common = common & set(peruser[uid].keys())
     for uid in common:
       if verbose():
-        print id_to_userstr(db, uid)
+        print(id_to_userstr(db, uid))
       else:
-        print uid
+        print(uid)
     if options.tweets:
       for fid in common:
-        print u'{} favorited by:'.format(id_to_userstr(db, fid))
+        print(u'{} favorited by:'.format(id_to_userstr(db, fid)))
         for uid in peruser:
           uname = id_to_userstr(db, uid)
           for twid in peruser[uid][fid]:
             tw = db.tweets.find_one({'id': twid})
-            print u'Tweet {} by {}: {}'.format(twid, uname, tw.get('text')).encode('utf-8')
-            print u'--'
-        print u'======'
+            print(u'Tweet {} by {}: {}'.format(twid, uname, tw.get('text')))
+            print(u'--')
+        print(u'======')
   if not (options.list or options.common or options.tweets):
-    for uid, cnt in perfaved.iteritems():
-      print u'{} {}'.format(uid, cnt)
+    for uid, cnt in perfaved.items():
+      print(u'{} {}'.format(uid, cnt))
 
 
