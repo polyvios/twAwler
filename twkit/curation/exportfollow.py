@@ -23,10 +23,12 @@ if __name__ == '__main__':
   parser.add_option("-o", "--output", action="store", dest="filename", default='follow.txt', help="Output file")
   parser.add_option("-b", "--before", action="store", dest="before", default=False, help="Before given date.")
   parser.add_option("-a", "--after", action="store", dest="after", default=False, help="After given date.")
+  parser.add_option("-s", "--skip", action="store", dest="skip", type="long", default=None, help="After given date.")
+  parser.add_option("--atid", action="store", dest="atid", type="long", default=None, help="After given user id.")
   (options, args) = parser.parse_args()
 
   verbose(options.verbose)
-  db, _ = init_state(use_cache=False, ignore_api=True)
+  db, _ = init_state(use_cache=True, ignore_api=True)
 
   criteria = {}
   if options.before:
@@ -36,10 +38,15 @@ if __name__ == '__main__':
 
   num = db.follow.count()
   if options.before or options.after:
-    edges = db.follow.find({'date': criteria}, {'id':1, 'date':1, 'follows': 1})
+    edges = db.follow.find({'date': criteria}, {'id':1, 'follows': 1})
     #edges = db.follow.aggregate([ { '$sort': { 'id' : 1} }, { '$match' : { 'date' : criteria } } ], hint='id_1_date_1_follows_1')
   else:
-    edges = db.follow.find({}, {'id':1, 'follows':1}).sort('id', 1)
+    if options.atid:
+      edges = db.follow.find({'id': {'$gte': options.atid}}, {'id':1, 'follows':1}).sort('id', 1).batch_size(100)
+    else:
+      edges = db.follow.find({}, {'id':1, 'follows':1}).sort('id', 1).batch_size(100)
+  if options.skip:
+    edges = edges.skip(options.skip)
   if verbose():
     edges = Bar("Processing:", max=num, suffix = '%(index)d/%(max)d - %(eta_td)s').iter(edges)
   outf = open(options.filename, "w")

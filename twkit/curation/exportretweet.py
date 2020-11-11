@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -22,7 +22,6 @@
 import sys
 import optparse
 import dateutil.parser
-from datetime import datetime
 from collections import Counter
 from progress.bar import Bar
 from twkit.utils import *
@@ -49,35 +48,50 @@ if __name__ == '__main__':
     sys.stderr.write("initialize retweet scan\n")
     sys.stderr.flush()
   if options.before or options.after:
-    tweets = db.tweets.find({'retweeted_status.user.id': {'$gt': 1}, 'created_at': criteria}, {'retweeted_status.user.id':1, 'user.id':1}).sort('retweeted_status.user.id', 1)
+    tweets = db.tweets.find(
+      { 'created_at': criteria},
+      { 'retweeted_status.user.id':1, 'user.id':1, 'id': 1 }
+    )
+    num = db.tweets.count({'created_at': criteria})
+    if verbose():
+      tweets = Bar("Loading:", max=num, suffix = '%(index)d/%(max)d - %(eta_td)s').iter(tweets)
+    tweets = sorted(
+      list(tweets),
+      key=lambda x: x['user']['id']
+    )
   else:
-    tweets = db.tweets.find({'retweeted_status.user.id': {'$gt': 1}}, {'retweeted_status.user.id':1, 'user.id':1}).sort('retweeted_status.user.id', 1)
-  num = db.tweets.count()
+    tweets = db.tweets.find(
+      {},
+      { 'retweeted_status.user.id': 1, 'user.id': 1, 'id': 1}
+    ).sort('user.id', 1)
+    num = db.tweets.count()
   if verbose():
-    print "starting scan"
+    sys.stderr.write("about to scan {} total tweets for retweets\n".format(num))
+    sys.stderr.flush()
     tweets = Bar("Processing:", max=num, suffix = '%(index)d/%(max)d - %(eta_td)s').iter(tweets)
   with open(options.filename, "w") as outf:
     trackeduser = 0
     usercnt = Counter()
     for t in tweets:
-      orig = t['retweeted_status']['user']['id']
-      rter = t['user']['id']
+      if 'retweeted_status' not in t: continue
+      orig = t['user']['id']
+      rted = t['retweeted_status']['user']['id']
       if orig != trackeduser:
         if trackeduser != 0:
           if verbose():
-            print "done with {}, saving edges".format(id_to_userstr(db, trackeduser))
+            print("done with {}, saving {} edges".format(id_to_userstr(db, trackeduser), len(usercnt)))
           greeku = is_greek(db, trackeduser) or (get_tracked(db, trackeduser) is not None)
-          for u, c in usercnt.iteritems():
+          for u, c in usercnt.items():
             if options.greek and not is_greek(db, u) and not greeku and get_tracked(db, u) is None: continue
-            outf.write('{} {} {}\n'.format(u, trackeduser, c))
+            outf.write('{} {} {}\n'.format(trackeduser, u, c))
         usercnt.clear()
         trackeduser = orig
-      usercnt[rter] += 1
+      usercnt[rted] += 1
     if trackeduser != 0:
       if verbose():
-        print "done with {}, saving edges".format(id_to_userstr(db, trackeduser))
+        print("done with {}, saving edges".format(id_to_userstr(db, trackeduser)))
       greeku = is_greek(db, trackeduser) or (get_tracked(db, trackeduser) is not None)
-      for u, c in usercnt.iteritems():
+      for u, c in usercnt.items():
         if options.greek and not is_greek(db, u) and not greeku and get_tracked(db, u) is None: continue
-        outf.write('{} {} {}\n'.format(u, trackeduser, c))
- 
+        outf.write('{} {} {}\n'.format(trackeduser, u, c))
+

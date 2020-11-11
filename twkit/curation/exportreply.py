@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -47,26 +47,35 @@ if __name__ == '__main__':
     sys.stderr.write("initialize reply scan\n")
     sys.stderr.flush()
   if options.before or options.after:
-    tweets = db.tweets.find({'in_reply_to_user_id': {'$gt': 1}, 'created_at': criteria}, {'in_reply_to_user_id':1, 'user': 1}).sort('in_reply_to_user_id', 1)
+    tweets = db.tweets.find(
+      {'in_reply_to_user_id': {'$gt': 1}, 'created_at': criteria},
+      {'in_reply_to_user_id':1, 'user.id': 1}
+    ).sort('in_reply_to_user_id', 1)
   else:
-    tweets = db.tweets.find({'in_reply_to_user_id': {'$gt': 1}}, {'in_reply_to_user_id':1, 'user': 1}).sort('in_reply_to_user_id', 1)
+    tweets = db.tweets.find(
+      {'in_reply_to_user_id': {'$gt': 1}},
+      {'in_reply_to_user_id':1, 'user': 1}
+    ).sort('in_reply_to_user_id', 1)
+  sys.stderr.write("counting\n")
+  sys.stderr.flush()
   num = db.tweets.count()
   if verbose():
-    sys.stderr.write("starting scan\n")
+    sys.stderr.write("about to scan {} total tweets for replies\n".format(num))
     sys.stderr.flush()
     tweets = Bar("Processing:", max=num, suffix = '%(index)d/%(max)d - %(eta_td)s').iter(tweets)
   with open(options.filename, "w") as outf:
     trackeduser = 0
     usercnt = Counter()
     for t in tweets:
+      # for every matching tweet, count that tweet.user.id replied to tweet.in_reply_to_user_id
       orig = t['in_reply_to_user_id']
       answer = t['user']['id']
       if orig != trackeduser:
         if trackeduser != 0:
           if verbose():
-            print "done with {}, saving edges".format(id_to_userstr(db, trackeduser))
+            print("done with {}, saving {} edges".format(id_to_userstr(db, trackeduser), len(usercnt)))
           greeku = is_greek(db, trackeduser) or (get_tracked(db, trackeduser) is not None)
-          for u, c in usercnt.iteritems():
+          for u, c in usercnt.items():
             if options.greek and not is_greek(db, u) and not greeku and get_tracked(db, u) is None: continue
             outf.write('{} {} {}\n'.format(u, trackeduser, c))
         usercnt.clear()
@@ -74,9 +83,9 @@ if __name__ == '__main__':
       usercnt[answer] += 1
     if trackeduser != 0:
       if verbose():
-        print "done with {}, saving edges".format(id_to_userstr(db, trackeduser))
+        print("done with {}, saving edges".format(id_to_userstr(db, trackeduser)))
       greeku = is_greek(db, trackeduser) or (get_tracked(db, trackeduser) is not None)
-      for u, c in usercnt.iteritems():
+      for u, c in usercnt.items():
         if options.greek and not is_greek(db, u) and not greeku and get_tracked(db, u) is None: continue
         outf.write('{} {} {}\n'.format(u, trackeduser, c))
  
