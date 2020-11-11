@@ -36,7 +36,7 @@ def del_userid(db, graph, uid):
   gprint(db.suspended.delete_many({'id':uid}).deleted_count)
   gprint(db.users.delete_many({'id':uid}).deleted_count)
   gprint(db.uservectors.delete_many({'id':uid}).deleted_count)
-  gprint(db.tweets.delete_many({'user.id':uid}).deleted_count)
+  gprint(db.tweets.delete_many({'user.id':uid, 'lang': {'$ne': config.lang}}).deleted_count)
 
 
 

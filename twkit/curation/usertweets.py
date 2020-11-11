@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2017 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -29,14 +29,15 @@ if __name__ == '__main__':
     uname = None if options.ids else user
     uid = long(user) if options.ids else None
     u = lookup_user(db, uid, uname)
-    print "getting {} tweets".format(id_to_userstr(db, u['id']))
+    if u is None: continue
+    print("getting {} tweets".format(id_to_userstr(db, u['id'])))
 
     criteria = {'user.id': u['id']}
     if options.deleted:
       criteria['deleted'] = True
     if options.lang:
       criteria['lang'] = config.lang
-    print criteria
+    print(criteria)
     tweets = db.tweets.find(criteria)
     cnt = tweets.count()
     if cnt > 1:
@@ -45,6 +46,6 @@ if __name__ == '__main__':
     for tw in tweets:
       if options.text:
         if 'text' in tw:
-          print u'{}: {}'.format(tw['created_at'], tw['text']).encode('utf-8')
+          print(u'{}: {}'.format(tw['created_at'], tw['text']))
       else:
         print(tw)

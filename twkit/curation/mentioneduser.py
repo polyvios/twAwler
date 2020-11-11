@@ -16,7 +16,6 @@ import json
 import time
 import re
 from pymongo import MongoClient
-from bson.json_util import loads
 from datetime import datetime
 from sets import Set
 

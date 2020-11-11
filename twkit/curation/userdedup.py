@@ -1,9 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2017 Polyvios Pratikakis
+# (c) 2016-2019 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
+
+"""
+Command-line tool that scans the user data collection for duplicates.
+Will ignore timestamp, number of posted tweets and favorites, so that
+it avoids keeping full user objects for these counters.
+"""
 
 import sys
 import re
