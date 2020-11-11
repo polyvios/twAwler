@@ -91,7 +91,7 @@ if __name__ == '__main__':
   if options.query:
     q = json.loads(options.query)
     if verbose():
-      gprint(q)
+      print(q)
     edges = db.images.find(q).sort('image', 1)
   else:
     edges = db.images.find({}).sort('image', 1).limit(1000)

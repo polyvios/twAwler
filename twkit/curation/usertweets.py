@@ -27,7 +27,7 @@ if __name__ == '__main__':
   userlist = [x.lower().replace("@", "") for x in args]
   for user in userlist:
     uname = None if options.ids else user
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     u = lookup_user(db, uid, uname)
     if u is None: continue
     print("getting {} tweets".format(id_to_userstr(db, u['id'])))

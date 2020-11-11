@@ -134,5 +134,5 @@ if __name__ == '__main__':
     else:
       for list_id in lists:
         listname = db.lists.find_one({'id': list_id})
-        print(u"{} : {} in {} : {}".format(id_to_userstr(db, uid), uid, list_id, listname['uri']).encode('utf-8'))
+        print(u"{} : {} in {} : {}".format(id_to_userstr(db, uid), uid, list_id, listname['uri']))
 

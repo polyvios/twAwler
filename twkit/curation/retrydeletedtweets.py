@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2017 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -53,7 +53,7 @@ if __name__ == '__main__':
 
   if len(args):
     for user in args:
-      uid = long(user) if options.ids else None
+      uid = int(user) if options.ids else None
       uname = None if options.ids else user
       u = lookup_user(db, uid, uname)
       pull_deleted(db, api, twitterapi, u['id'] if u else None, options.nort)

@@ -22,7 +22,7 @@ if __name__ == '__main__':
   verbose(options.verbose)
   db, _ = init_state(use_cache=False, ignore_api=True)
 
-  userlist = (long(x) for x in args)
+  userlist = (int(x) for x in args)
 
   for userid in userlist:
     look_for_mentioned_id(db, userid)
