@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2017-2018 Polyvios Pratikakis
+# (c) 2017-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -13,6 +13,7 @@ If you need to rebuild that collection, use 'findcommontweets.py' first
 import sys
 import optparse
 import itertools
+import dateutil.parser
 from collections import Counter, defaultdict
 from datetime import datetime,timedelta
 from progress.bar import Bar
@@ -46,19 +47,22 @@ if __name__ == '__main__':
     users = v['user_ids']
     for tid in v['tweet_ids']:
       tw = db.tweets.find_one({'id': tid})
+      if tw is None:
+        print(u'OOPS: tweet missing: {}'.format(tid))
+        continue
       dest = tw['user']['id']
       graph[(v['user_id'], dest)] += 1
       copiedtweets[dest].append(tid)
       if dest in users:
         users.remove(dest)
       else:
-        print u'tweet {} copier {} not found in users'.format(tid, dest)
+        print(u'tweet {} copier {} not found in users'.format(tid, dest))
     if len(users):
       for u in users:
-        print u'user listed without related tweet: {}'.format(id_to_userstr(db, u))
+        print(u'user listed without related tweet: {}'.format(id_to_userstr(db, u)))
 
   #if options.number:
-    #everyone = set(u for e,w in graph.iteritems() for u in e if w >= options.number)
+    #everyone = set(u for e,w in graph.items() for u in e if w >= options.number)
   #else:
   everyone = set(u for e in graph.keys() for u in e)
 
@@ -68,7 +72,7 @@ if __name__ == '__main__':
     f.write("digraph {\n")
     # write vertices
     for uid in everyone:
-      count =  db.tweets.count({'user.id': uid})
+      count =  db.tweets.count( {'user.id': uid, 'created_at': criteria['event_start'] })
       copied = len(set(copiedtweets[uid]))
       percentage = 100.0 * copied / count
       if options.threshold is not None and options.threshold > percentage:
