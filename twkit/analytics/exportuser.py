@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2020 Polyvios Pratikakis
+# (c) 2016-2018 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -11,7 +11,7 @@ Export user information to CSV
 
 import sys
 import optparse
-import csv
+import unicodecsv
 import dateutil.parser
 from twkit.utils import *
 from twkit.analytics.listfollowers import save_csv
@@ -29,7 +29,7 @@ if __name__ == '__main__':
   userids = []
   for user in userlist:
     uname = None if options.ids else user
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     u = lookup_user(db, uid, uname)
     if u is None:
       if verbose(): sys.stderr.write(u'Unknown user {}\n'.format(user))
