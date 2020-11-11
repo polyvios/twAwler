@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -13,7 +13,7 @@ Output is edges in "follower-id user-id" syntax: direction of "follow" to the ri
 import sys
 import optparse
 import fileinput
-import unicodecsv
+import csv
 import dateutil.parser
 from twkit.utils import *
 
@@ -75,12 +75,11 @@ fieldnames = [
 
 def save_csv(db, userids, filename):
   with open(filename, 'w') as csvfile:
-    vectorwriter = unicodecsv.DictWriter(csvfile,
+    vectorwriter = csv.DictWriter(csvfile,
       fieldnames=fieldnames,
       restval='',
-      encoding='utf-8',
       extrasaction='ignore',
-      quoting=unicodecsv.QUOTE_MINIMAL)
+      quoting=csv.QUOTE_MINIMAL)
       
     vectorwriter.writeheader()
     for fid in userids:
@@ -104,7 +103,7 @@ def get_userlist_followers(db, userlist, options, criteria):
   total = frozenset()
   for user in userlist:
     uname = None if options.ids else user
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     u = lookup_user(db, uid, uname)
     if u is None:
       if verbose(): sys.stderr.write(u'Unknown user {}\n'.format(user))
@@ -118,7 +117,7 @@ def get_userlist_followers(db, userlist, options, criteria):
     else:
       for f in followers:
         if options.greek and not is_greek(db, f): continue
-        print u'{} {}'.format(f, uid)
+        print(u'{} {}'.format(f, uid))
         if options.addusers:
           if is_dead(db, f): continue
           if is_suspended(db, f): continue
@@ -170,7 +169,7 @@ if __name__ == '__main__':
   if options.common:
     for f in common:
       if options.greek and not is_greek(db, f): continue
-      print u'{}'.format(f)
+      print(u'{}'.format(f))
   if options.close:
     g = fill_follow_graph(db, total)
   if options.dot:
