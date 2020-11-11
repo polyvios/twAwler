@@ -11,6 +11,7 @@ Use -s switch to re-scan the existence of crawled tweets and discover
 newly deleted tweets.
 '''
 
+import dateutil.parser
 from twkit.utils import *
 from twkit.crawler.freq import *
 from twkit.analytics.stats import *
@@ -27,12 +28,20 @@ if __name__ == '__main__':
   parser.add_option("--id", action="store_true", dest="ids", default=False, help="Input is id, not username.")
   parser.add_option("-s", '--scan', action="store_true", dest="scan", default=False, help="Scan tweets to discover deleted ones.")
   parser.add_option('--nort', action="store_true", dest="nort", default=False, help="Ignore retweets.")
+  parser.add_option("--before", action="store", dest="before", default=False, help="Before given date.")
+  parser.add_option("--after", action="store", dest="after", default=False, help="After given date.")
   (options, args) = parser.parse_args()
   verbose(options.verbose)
   db, twitterapi = init_state()
   auth = tweepy.OAuthHandler(config.consumer_key, config.consumer_secret)
   auth.set_access_token(config.access_token, config.access_token_secret)
   api = tweepy.API(auth)
+
+  daterange = {}
+  if options.before:
+    daterange['$lte'] = dateutil.parser.parse(options.before)
+  if options.after:
+    daterange['$gte'] = dateutil.parser.parse(options.after)
 
   for user in args:
     uid = int(user) if options.ids else None
@@ -41,7 +50,12 @@ if __name__ == '__main__':
     if u is None:
       print(uid, uname, "not found")
     if options.scan:
-      tweets = db.tweets.find({'user.id': u['id'], 'deleted': None}).sort('created_at', 1)
+      criteria = {}
+      if options.before or options.after:
+        criteria['created_at'] = daterange
+      criteria['user.id'] = u['id']
+      criteria['deleted'] = None
+      tweets = db.tweets.find(criteria).sort('created_at', 1)
       idlist = []
       for t in tweets:
         idlist.append(t['id'])
@@ -53,7 +67,12 @@ if __name__ == '__main__':
       print(u'found {} deleted'.format(len(idlist)))
       idlist = []
 
-    tweets = db.tweets.find({'deleted': True, 'user.id': u['id']}).sort('created_at', 1)
+    criteria = {}
+    if options.before or options.after:
+      criteria['created_at'] = daterange
+    criteria['user.id'] = u['id']
+    criteria['deleted'] = True
+    tweets = db.tweets.find(criteria).sort('created_at', 1)
     if verbose():
       tweets = Bar("Processing:", max=tweets.count(), suffix = '%(index)d/%(max)d - %(eta_td)s').iter(tweets)
     for t in tweets:

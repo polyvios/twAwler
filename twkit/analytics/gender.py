@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -26,7 +26,7 @@ def get_gender(db, uid):
   locationarticles = [ u'στο', u'στην', u'στη', u'στα', u'στους', u'στις', u'σε', u'στον' ]
   pattern = re.compile(u'(?:ειμαι|είμαι|ήμουν|ήμουνα|ημουν):? ([Α-ωάώίύέόήΐϊϋ]*)', re.I)
   tweets = get_user_tweets(db, uid, None)
-  #print "got {} tweets for {}".format(tweets.count(), uid)
+  #print("got {} tweets for {}".format(tweets.count(), uid))
   for t in tweets:
     if 'retweeted_status' in t: continue
     if 'text' not in t: continue
@@ -39,15 +39,15 @@ def get_gender(db, uid):
     if deaccent(nextword).lower() in locations: continue
     if deaccent(nextword).lower() in locationarticles: continue
     pos = get_word_graph().get_pos(nextword)
-    #print nextword,
-    #gprint(pos)
+    #print(nextword,)
+    #print(pos)
     if pos is None: continue
     for x in pos:
       if u'αρσ' in x:
-        if verbose(): print u"male: {}".format(nextword).encode('utf-8')
+        if verbose(): print(u"male: {}".format(nextword))
         male += 1
       if u'θηλ' in x:
-        if verbose(): print u"female: {}".format(nextword).encode('utf-8')
+        if verbose(): print(u"female: {}".format(nextword))
         female += 1
   total = male + female
   return {
@@ -69,7 +69,7 @@ if __name__ == '__main__':
   db, _ = init_state(use_cache=False, ignore_api=True)
   userlist = [x.lower().replace("@", "") for x in args]
   for user in userlist:
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     uname = None if options.ids else user
     u = get_tracked(db, uid, uname)
     if u == None:
@@ -77,8 +77,8 @@ if __name__ == '__main__':
       if x:
         u = { 'id': x['id'], 'screen_name_lower': x['screen_name'].lower() }
       else:
-        print "unknown user:", uid, uname
+        print("unknown user:", uid, uname)
         continue
     #user_tweets = get_user_tweets(db, u['id'], None)
     g = get_gender(db, u['id'])
-    gprint(g)
+    print(g)

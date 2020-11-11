@@ -71,7 +71,7 @@ def add100(db, api, twitterapi, idlist):
   return idlist
 
 
-def repopulate(db, api, twitterapi, uid=None, skip=False):
+def repopulate(db, api, twitterapi, uid, options):
   cont=True
   while(cont):
     idlist = []
@@ -82,8 +82,8 @@ def repopulate(db, api, twitterapi, uid=None, skip=False):
     else:
       q = db.tweets.find({'user.id': uid, 'truncated': True, 'deleted': None}).batch_size(2000)
       #q = db.tweets.find({'user.id': uid, 'text': {'$regex': 'http'}, 'deleted': None, 'urls': {'$exists': 0}}).limit(100)
-    if skip:
-      q = q.skip(2000)
+    if options.skip:
+      q = q.skip(options.skip)
     if verbose():
       q = Bar("Processing:", max=db.tweets.count(), suffix = '%(index)d/%(max)d - %(eta_td)s').iter(q)
     for tw in q:
@@ -106,7 +106,7 @@ def repopulate(db, api, twitterapi, uid=None, skip=False):
 if __name__ == '__main__':
   parser = optparse.OptionParser()
   parser.add_option('-a', '--all', action='store_true', dest='all', default=False, help='Try all users')
-  parser.add_option('-s', '--skip', action='store_true', dest='skip', default=False, help='Skip 1000 tweets in search. For use with second parallel crawler.')
+  parser.add_option('-s', '--skip', action='store', type='int', dest='skip', default=None, help='Skip 1000 tweets in search. For use with second parallel crawler.')
   parser.add_option('--id', action='store_true', dest='ids', default=False, help='Input is user id.')
   parser.add_option('-v', '--verbose', action='store_true', dest='verbose', default=False, help='Make noise.')
   (options, args) = parser.parse_args()
@@ -117,7 +117,7 @@ if __name__ == '__main__':
   verbose(options.verbose)
   db, twitterapi = init_state(use_cache=True, ignore_api=False)
   if options.all:
-    repopulate(db, api, twitterapi, None, options.skip)
+    repopulate(db, api, twitterapi, None, options)
   else:
     for userstr in args:
       u = lookup_user(db, uid=int(userstr)) if options.ids else lookup_user(db, uname=userstr)
@@ -126,5 +126,5 @@ if __name__ == '__main__':
         continue
       uid = u['id']
       if verbose(): print('repopulate id {}'.format(uid))
-      repopulate(db, api, twitterapi, uid, options.skip)
+      repopulate(db, api, twitterapi, uid, options)
 

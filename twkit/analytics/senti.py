@@ -1,26 +1,21 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
-#from textblob import TextBlob
 import sys
 from nltk.tokenize import TweetTokenizer
-from sets import Set
 from twkit.utils import *
 from twkit.analytics.stats import *
-#from twkit.analytics.stem import stem as external_stemmer1
-#import matplotlib.pyplot as plt
-import unicodecsv
+from twkit.analytics.stem import stem as external_stemmer1
+import csv
 import optparse
 import itertools
 from collections import defaultdict, Counter
 from greekdict import WikiWordGraph
 import dateutil.parser
-#import heapq
 
 def external_stemmer(w):
   """
@@ -52,7 +47,7 @@ class WordLookup(object):
     self.lower = {}
     self.accen = {}
     self.stemd = {}
-    for key, value in self.exact.iteritems():
+    for key, value in self.exact.items():
       #self.exact[key] = value
       #don't lower ground truth, capitalization in truth stays fixed, allows for capturing e.g. first names.
 #      key = key.lower()
@@ -106,13 +101,13 @@ class GrSentimentAnalysis(object):
     self.senti_ngrams_accen = {}
     #self.senti_ngrams_stem = {}
     with open(lexicon_filename, 'r') as csvfile:
-      vectorreader = unicodecsv.DictReader(csvfile)
+      vectorreader = csv.DictReader(csvfile)
       for v in vectorreader:
         key = v['InitialTerm']
         if key[0] == u'#': continue
         value = int(v['Sentiment'])
         if key in self.senti_words_exact:
-          if verbose(): print u'Ignoring duplicate sentiment pattern: {} : {}, already assigned {}'.format(key, value, self.senti_words_exact[key])
+          if verbose(): print(u'Ignoring duplicate sentiment pattern: {} : {}, already assigned {}'.format(key, value, self.senti_words_exact[key]))
           continue
         self.senti_words_exact[key] = value
         key = key.lower()
@@ -155,17 +150,17 @@ class GrSentimentAnalysis(object):
     #trigrams = zip(words_exact, words_exact[1:], words_exact[2:])
     if verbose():
       for i in xrange(len(words_exact)):
-        print u'{}'.format(words_exact[i]).encode('utf-8'),
-        if senti_scores_exact[i]: print u'ex({}:{})'.format(words_exact[i], senti_scores_exact[i]).encode('utf-8'),
-        if senti_scores_lower[i]: print u'lo({}:{})'.format(words_lower[i], senti_scores_lower[i]).encode('utf-8'),
-        if senti_scores_accen[i]: print u'ac({}:{})'.format(words_accen[i], senti_scores_accen[i]).encode('utf-8'),
-        #if senti_scores_stem[i]: print u'st({}:{})'.format(words_stem[i], senti_scores_stem[i]).encode('utf-8'),
+        print(u'{} '.format(words_exact[i]).encode('utf-8'), end='')
+        if senti_scores_exact[i]: print(u'ex({}:{})'.format(words_exact[i], senti_scores_exact[i]).encode('utf-8'), end=' ')
+        if senti_scores_lower[i]: print(u'lo({}:{})'.format(words_lower[i], senti_scores_lower[i]).encode('utf-8'), end=' ')
+        if senti_scores_accen[i]: print(u'ac({}:{})'.format(words_accen[i], senti_scores_accen[i]).encode('utf-8'), end=' ')
+        #if senti_scores_stem[i]: print(u'st({}:{})'.format(words_stem[i], senti_scores_stem[i]).encode('utf-8'), end=' ')
         if senti_scores_wiki[i]:
-          print u'wiki',
+          print(u'wiki', end=' ')
           for j,k in zip(words_wiki[i], senti_scores_wiki[i]):
-            print u'({}:{})'.format(j,k).encode('utf-8'),
-          print u'endwiki',
-        print u''
+            print(u'({}:{})'.format(j,k).encode('utf-8'), end=' ')
+          print(u'endwiki', end=' ')
+        print(u'')
     senti_all = zip(
       senti_scores_exact,
       senti_scores_wiki_avg,
@@ -221,7 +216,7 @@ class GrSentimentAnalysis(object):
     negatives = [s for s in senti_scores if s < 0]
     senti_pos = numpy.mean(positives) if len(positives) else 0
     senti_neg = numpy.mean(negatives) if len(negatives) else 0
-    #gprint(wordsleft)
+    #print(wordsleft)
     return senti_pos, senti_neg
    
 # end class
@@ -251,21 +246,21 @@ class EntityAnalysis(object):
     self.entities = {}
     #self.entity_by_word = {}
     self.entity_lookup = {}
-    for key, values in entity_dict.iteritems():
+    for key, values in entity_dict.items():
       if key[0] == u'#':
         key = key[1:]
       self.entities[key] = Entity(key)
       if key in self.entity_lookup:
-        print u'double key entry for {}'.format(key).encode('utf-8')
+        print(u'double key entry for {}'.format(key).encode('utf-8'))
       else:
         self.entity_lookup[key] = [key]
       for v in values:
         if v in self.entity_lookup:
           if key not in self.entity_lookup[v]:
-            if verbose(): print u'double entry for different keys (count will be evenly distributed)! {} {} {}'.format(v, key, self.entity_lookup[v]).encode('utf-8')
+            if verbose(): print(u'double entry for different keys (count will be evenly distributed)! {} {} {}'.format(v, key, self.entity_lookup[v]).encode('utf-8'))
             self.entity_lookup[v].append(key)
           else:
-            if verbose(): print u'double entry for {}'.format(v).encode('utf-8')
+            if verbose(): print(u'double entry for {}'.format(v).encode('utf-8'))
         else:
           self.entity_lookup[v] = [key]
     self.lookup = WordLookup(self.word_graph, self.entity_lookup, zeroval=[], use_stem=False)
@@ -290,10 +285,10 @@ class EntityAnalysis(object):
     return flat_list
 
   def dump(self):
-    for key,value in self.entities.iteritems():
-      print u'{}: seen {} times, normalized {} times '.format(key, value.count, value.count_norm).encode('utf-8')
-      gprint(value.overlap_count)
-      print u'---'
+    for key,value in self.entities.items():
+      print(u'{}: seen {} times, normalized {} times '.format(key, value.count, value.count_norm).encode('utf-8'))
+      print(value.overlap_count)
+      print(u'---')
       
 # end class
 
@@ -305,7 +300,7 @@ sentiment_analysis = None
 def get_word_graph():
   global word_graph
   if word_graph is None:
-    if verbose(): print "{} loading word graph".format(datetime.utcnow())
+    if verbose(): print("{} loading word graph".format(datetime.utcnow()))
     word_graph = WikiWordGraph('data/word_graph.json')
   return word_graph
 
@@ -339,7 +334,7 @@ def compute_sentiment(db, tweets, entity_file):
     day = tw['created_at'].replace(hour=0, minute=0, second=0, microsecond=0) #daily
     sentiment = sentiment_analysis.analyze(tw['text'])
     #sentiment2 = sentiment_analysis.analyze1(tw['text'])
-    #print "compare:", sentiment, sentiment2
+    #print("compare:", sentiment, sentiment2)
     entlist = a.analyze(tw['text'])
     if sentiment != (0.0, 0.0, 0):
       daily_sentiment[day] = tuple_add(daily_sentiment[day], sentiment + (1,))
@@ -356,7 +351,7 @@ def compute_sentiment(db, tweets, entity_file):
 def fill_user_sentiment(db, u, criteria, entity_file):
   user_tweets = get_user_tweets(db, u['id'], criteria)
   daily_sentiment, entity_sentiment, daily_entity_sentiment, a = compute_sentiment(db, user_tweets, entity_file)
-  if verbose(): print " saving"
+  if verbose(): print(" saving")
   u['daily_sentiment'] = [
     { 
       'day': day,
@@ -365,9 +360,9 @@ def fill_user_sentiment(db, u, criteria, entity_file):
         {
           'entity': e,
           'sentiment' : (s[0]/s[2], s[1]/s[2])
-        } for e, s in row.iteritems()
+        } for e, s in row.items()
       ]
-    } for day, row in sorted(daily_entity_sentiment.iteritems())
+    } for day, row in sorted(daily_entity_sentiment.items())
   ]
   #elist = [a.entities[x] for x in set([x for e in a.entities.values() for x in e.overlap_count.keys()])]
   elist = [a.entities[x[0]] for x in Counter([x for e in a.entities.values() for x in e.overlap_count.keys()]).most_common(500)]
@@ -383,14 +378,14 @@ def fill_user_sentiment(db, u, criteria, entity_file):
         'source': elist.index(e),
         'target': elist.index(a.entities[e2]),
         'value': cnt
-      } for e in elist for e2, cnt in e.overlap_count.iteritems() if a.entities[e2] in elist
+      } for e in elist for e2, cnt in e.overlap_count.items() if a.entities[e2] in elist
     ]
   }
   u['senti_entities'] = [
     {
       'entity': e,
       'sentiment' : (s[0]/s[2], s[1]/s[2])
-    } for e, s in sorted(entity_sentiment.iteritems(), lambda j,i: int(numpy.ceil((i[1][0] - i[1][1]) - (j[1][0] - j[1][1]))) )
+    } for e, s in sorted(entity_sentiment.items(), key=lambda i: int(numpy.ceil((i[1][0] - i[1][1]))))
   ]
   return daily_entity_sentiment
 
@@ -415,35 +410,35 @@ if __name__ == '__main__':
     criteria['$gte'] = dateutil.parser.parse(options.after)
 
   if options.onetweet:
-    s = compute_sentiment(db, db.tweets.find({'id': long(args[0])}), options.entity_file)
-    gprint(s)
+    s = compute_sentiment(db, db.tweets.find({'id': int(args[0])}), options.entity_file)
+    print(s)
     sys.exit(0)
 
   userlist = [x.lower().replace("@", "") for x in args]
   for userstr in userlist:
-    uid = long(userstr) if options.ids else None
+    uid = int(userstr) if options.ids else None
     uname = None if options.ids else userstr
     u = lookup_user(db, uid, uname)
     if u is None:
-      if verbose(): print u'Skipping unknown user: {}'.format(userstr)
+      if verbose(): print(u'Skipping unknown user: {}'.format(userstr))
       continue
     #user_tweets = get_user_tweets(db, u['id'], criteria)
     fill_user_sentiment(db, u, criteria, options.entity_file)
-    gprint(u)
+    print(u)
     #poscnt = {}
     #negcnt = {}
-    #for (d, (senti_pos, senti_neg)) in daily_sentiment.iteritems():
+    #for (d, (senti_pos, senti_neg)) in daily_sentiment.items():
     #  poscnt[d] = poscnt.get(d, []) + [senti_pos]
     #  negcnt[d] = negcnt.get(d, []) + [senti_neg]
-    #  print u'{} {} {}'.format(tw['created_at'].isoformat(), senti_pos, senti_neg) # blob_sent, blob_subj, tw['text'])
+    #  print(u'{} {} {}'.format(tw['created_at'].isoformat(), senti_pos, senti_neg) # blob_sent, blob_subj, tw['text']))
     #posx = []
     #posy = []
     #negx = []
     #negy = []
-    #for i in sorted(poscnt.iteritems(), lambda x, y: int((x[0]-y[0]).total_seconds())):
+    #for i in sorted(poscnt.items(), lambda x, y: int((x[0]-y[0]).total_seconds())):
     #  posx.append(i[0])
     #  posy.append(numpy.mean(i[1]))
-    #for i in sorted(negcnt.iteritems(), lambda x, y: int((x[0]-y[0]).total_seconds())):
+    #for i in sorted(negcnt.items(), lambda x, y: int((x[0]-y[0]).total_seconds())):
     #  negx.append(i[0])
     #  negy.append(numpy.mean(i[1]))
     #fig, ax = plt.subplots(figsize=(18,7))

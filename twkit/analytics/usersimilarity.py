@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -22,13 +22,13 @@ def user_info(db, user):
   fr = set(get_friends(db, user['id']))
   fo = set(get_followers(db, user['id']))
   fr_fo_jaccard = 1.0 * len(fr & fo) / len(fr | fo)
-  print "Fr-fo similarity of {}: {}".format(user['screen_name_lower'], fr_fo_jaccard)
-  print "{} is not followed back by {}".format(user['screen_name_lower'], len(fr - fo))
+  print("Fr-fo similarity of {}: {}".format(user['screen_name_lower'], fr_fo_jaccard))
+  print("{} is not followed back by {}".format(user['screen_name_lower'], len(fr - fo)))
   for i in fr - fo:
-    print "  {}".format(id_to_userstr(db, i))
-  print "{} does not follow back {}".format(user['screen_name_lower'], len(fo - fr))
+    print("  {}".format(id_to_userstr(db, i)))
+  print("{} does not follow back {}".format(user['screen_name_lower'], len(fo - fr)))
   #for i in fo - fr:
-  #  print "  {}".format(id_to_userstr(db, i))
+  #  print("  {}".format(id_to_userstr(db, i)))
 
 def fr_fo_jaccard_similarity(db, user1, user2):
   fr1 = set(get_friends(db, user1['id']))
@@ -47,15 +47,15 @@ def fr_fo_jaccard_similarity(db, user1, user2):
   common_fr = len(fr1 & fr2)
   common_fo = len(fo1 & fo2)
   if verbose():
-    print "{} followers : {}".format(user1['screen_name_lower'], len(fo1))
-    print "{} followers : {}".format(user2['screen_name_lower'], len(fo2))
-    print "Common       : {}".format(common_fo)
-    print "Follower Jaccard Similarity {}:{}: {}".format(user1['screen_name_lower'], user2['screen_name_lower'], fo_jaccard)
+    print("{} followers : {}".format(user1['screen_name_lower'], len(fo1)))
+    print("{} followers : {}".format(user2['screen_name_lower'], len(fo2)))
+    print("Common       : {}".format(common_fo))
+    print("Follower Jaccard Similarity {}:{}: {}".format(user1['screen_name_lower'], user2['screen_name_lower'], fo_jaccard))
 
-    print "{} friends   : {}".format(user1['screen_name_lower'], len(fr1))
-    print "{} friends   : {}".format(user2['screen_name_lower'], len(fr2))
-    print "Common       : {}".format(common_fr)
-    print "Friend Jaccard Similarity {}:{}  : {}".format(user1['screen_name_lower'], user2['screen_name_lower'], fr_jaccard)
+    print("{} friends   : {}".format(user1['screen_name_lower'], len(fr1)))
+    print("{} friends   : {}".format(user2['screen_name_lower'], len(fr2)))
+    print("Common       : {}".format(common_fr))
+    print("Friend Jaccard Similarity {}:{}  : {}".format(user1['screen_name_lower'], user2['screen_name_lower'], fr_jaccard))
   return {
     "friend_jaccard_similarity" : fr_jaccard,
     "common_friends" : common_fr,
@@ -98,14 +98,14 @@ if __name__ == '__main__':
   db, api = init_state(use_cache=True, ignore_api=True)
   user1 = args[0]
   userlist = args[1:]
-  uid1 = long(user1) if options.ids else None
+  uid1 = int(user1) if options.ids else None
   uname1 = None if options.ids else user1
   u1 = get_tracked(db, uid1, uname1)
   if u1 == None:
     u1 = lookup_user(db, uid1, uname1)
   uname1 = id_to_userstr(db, u1['id'])
   for user2 in userlist:
-    uid2 = long(user2) if options.ids else None
+    uid2 = int(user2) if options.ids else None
     uname2 = None if options.ids else user2
     u2 = get_tracked(db, uid2, uname2)
     if u2 == None:
@@ -116,6 +116,6 @@ if __name__ == '__main__':
     u = dict(sim, **favsim)
     u['user1'] = uname1
     u['user2'] = uname2
-    gprint(u)
+    print(u)
 
 

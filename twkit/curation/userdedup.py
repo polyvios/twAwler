@@ -1,17 +1,19 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2017 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
-import sys
-import re
-import time
+"""
+Command-line tool that scans the user data collection for duplicates.
+Will ignore timestamp, number of posted tweets and favorites, so that
+it avoids keeping full user objects for these counters.
+"""
+
 import optparse
 from progress.bar import Bar
 from datetime import datetime,timedelta
-from sets import Set
 from twkit.utils import *
 
 if __name__ == '__main__':
@@ -24,7 +26,7 @@ if __name__ == '__main__':
     if 'favourites_count' in user: del user['favourites_count']
     cursor = db.users.find({'screen_name_lower': user['screen_name_lower']}).skip(1)
     for user2 in cursor:
-      if user2['id'] != user['id']: print " user {} and {} have same screen name but different ids".format(user['id'], user2['id'])
+      if user2['id'] != user['id']: print(" user {} and {} have same screen name but different ids".format(user['id'], user2['id']))
       db.users.update_one(user2, {'$unset': {'screen_name_lower':1}})
   count = 0
   cursor = db.users.find({'screen_name_lower': {'$gt': ''}})
@@ -43,6 +45,6 @@ if __name__ == '__main__':
       if 'statuses_count' in user2: del user2['statuses_count']
       if 'favourites_count' in user2: del user2['favourites_count']
       if user == user2:
-        print " Delete {} {}".format(user2['screen_name'], user2['id'])
+        print(" Delete {} {}".format(user2['screen_name'], user2['id']))
         db.users.delete_one({'_id' : inner_id})
         count += 1

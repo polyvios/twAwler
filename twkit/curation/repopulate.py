@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -24,13 +24,13 @@ def add100(db, api, twitterapi, idlist):
     until = datetime.fromtimestamp(twitterapi.CheckRateLimit('/statuses/lookup').reset)
     sleeptime = (until - datetime.now()).total_seconds()
     #sleeptime = twitterapi.GetSleepTime('/statuses/lookup')
-    print "rate limit, wait", sleeptime
+    print("rate limit, wait", sleeptime)
     if sleeptime > 0:
-      time.sleep(long(sleeptime)+1)
+      time.sleep(int(sleeptime)+1)
       return add100(db, api, twitterapi, idlist )
     return []
   except tweepy.error.TweepError as e:
-    print 'other error {}'.format(str(e))
+    print('other error {}'.format(str(e)))
     time.sleep(2)
     return []
   bulk = db.tweets.initialize_unordered_bulk_op()
@@ -42,7 +42,7 @@ def add100(db, api, twitterapi, idlist):
     bulk.find({'id': tw.id}).upsert().update({'$set': j2})
     idlist.remove(tw.id)
   for i in idlist:
-    print 'tweet {} not found'.format(i)
+    print('tweet {} not found'.format(i))
     bulk.find({'id':i}).upsert().update({'$set': {'deleted': True}})
   sys.stdout.flush()
   bulk.execute()
@@ -52,13 +52,14 @@ def add100(db, api, twitterapi, idlist):
 def repopulate(db, api, twitterapi, uid=None, skip=False):
   idlist = []
   if uid is None:
-    tweets = db.tweets.find({'text': None, 'deleted': None}).batch_size(200)
+    tweets = db.tweets.find({'retweeted_status.id': {'$gt': 0}, 'user_mentions': None, 'deleted': None}).batch_size(200)
     #tweets = db.tweets.find({'urls': {'$type': 2}, 'deleted': None, '$where': '(this.urls[0].length > 30)'})
     #tweets = db.tweets.find({'text': {'$regex': 'http'}, 'urls': {'$exists': 0}}).limit(100)
   else:
-    tweets = db.tweets.find({'user.id': uid, 'text': None, 'deleted': None})
+    #tweets = db.tweets.find({'user.id': uid, 'text': None, 'deleted': None})
+    tweets = db.tweets.find({'user.id': uid, 'retweeted_status.id': {'$gt': 0}, 'user_mentions': None, 'deleted': None})
     #tweets = db.tweets.find({'user.id': uid, 'text': {'$regex': 'http'}, 'deleted': None, 'urls': {'$exists': 0}}).limit(100)
-  #print "found {}".format(tweets.count())
+  #print("found {}".format(tweets.count()))
   if skip:
     tweets = tweets.skip(2000)
   if verbose():
@@ -67,10 +68,10 @@ def repopulate(db, api, twitterapi, uid=None, skip=False):
     i = tw['id']
     idlist.append(i)
     if len(idlist) == 100:
-      add100(db, api, twitterapi, idlist, True)
+      add100(db, api, twitterapi, idlist)
       idlist = []
   if len(idlist):
-    add100(db, api, twitterapi, idlist, True)
+    add100(db, api, twitterapi, idlist)
   #bulk = db.tweets.initialize_unordered_bulk_op()
   #for i in idlist:
     #bulk.find({'id': i}).update({'$unset': {'retweeted_status.urls':1}})
@@ -92,7 +93,7 @@ if __name__ == '__main__':
   api = tweepy.API(auth)
 
   verbose(options.verbose)
-  db, twitterapi = init_state(True)
+  db, twitterapi = init_state(use_cache=False)
   if options.all:
     while True:
       try:
@@ -102,9 +103,9 @@ if __name__ == '__main__':
         continue
   else:
     for userstr in args:
-      u = lookup_user(db, uid=long(userstr)) if options.ids else lookup_user(db, uname=userstr)
+      u = lookup_user(db, uid=int(userstr)) if options.ids else lookup_user(db, uname=userstr)
       if u is None:
-        print "unknown user", userstr
+        print("unknown user", userstr)
         continue
       uid = u['id']
       if verbose(): print('repopulate id {}'.format(uid))

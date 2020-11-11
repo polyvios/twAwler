@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -12,7 +12,6 @@ Output is edges in "retweeter-id user-id" syntax: direction of "retweets" to the
 
 import sys
 import optparse
-import unicodecsv
 import dateutil.parser
 from collections import Counter
 from twkit.utils import *
@@ -46,7 +45,7 @@ if __name__ == '__main__':
   common = None
   for user in userlist:
     uname = None if options.ids else user
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     u = lookup_user(db, uid, uname)
     if u is None:
       if verbose(): sys.stderr.write(u'Unknown user {}\n'.format(user))
@@ -60,7 +59,7 @@ if __name__ == '__main__':
     else:
       for f in retweeters:
         if options.greek and not is_greek(db, f): continue
-        print u'{} {} {}'.format(uid, f, rtcnt[f]) if options.inv else u'{} {} {}'.format(f, uid, rtcnt[f])
+        print(u'{} {} {}'.format(uid, f, rtcnt[f]) if options.inv else u'{} {} {}'.format(f, uid, rtcnt[f]))
         if options.addusers:
           if is_dead(db, f): continue
           if is_suspended(db, f): continue
@@ -74,5 +73,5 @@ if __name__ == '__main__':
   if options.common:
     for f in common:
       if options.greek and not is_greek(db, f): continue
-      print u'{}'.format(f)
+      print(u'{}'.format(f))
 

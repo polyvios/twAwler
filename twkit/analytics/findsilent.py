@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -65,7 +65,7 @@ if __name__ == '__main__':
   else:
     users = (x.lower().replace("@", "") for x in args)
     if options.ids:
-      users = [lookup_user(db, u) for x in args for u in get_followers(db, long(x))]
+      users = [lookup_user(db, u) for x in args for u in get_followers(db, int(x))]
     else:
       users = [lookup_user(db, u) for x in args for u in get_followers(db, lookup_user(db, None, x).get('id', -1))]
     if verbose():
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     else: # new user
       if usertweets == 0 and lastuser:
         found += 1
-        #print " found {}".format(found)
+        #print(" found {}".format(found))
         friends = set(get_friends(db, lastuser))
         if len(friends) >= options.fthreshold:
           silentusers[lastuser] = friends
@@ -106,38 +106,38 @@ if __name__ == '__main__':
     for i in tl:
       x = jaccard(silentusers[i], silentusers[hd])
       if x > options.jthreshold:
-        print "{} {} {}".format(hd, i, x)
+        print("{} {} {}".format(hd, i, x))
     hd = tl[0]
     tl = tl[1:]
 
   #universelist = list(universe)
   #ndocs = len(silentusers)
   #nfeats = len(universelist)
-  #print "{} by {}".format(ndocs, nfeats)
-  #print "universe of friends:"
-  #gprint([id_to_userstr(db, x) for x in universelist])
-  #print ""
-  #matrix = np.array([np.in1d(universelist, list(x)) for u,x in silentusers.iteritems()])
+  #print("{} by {}".format(ndocs, nfeats))
+  #print("universe of friends:")
+  #print([id_to_userstr(db, x) for x in universelist])
+  #print("")
+  #matrix = np.array([np.in1d(universelist, list(x)) for u,x in silentusers.items()])
   #matrix = matrix.transpose()
-  #print "computing lookup dictionary"
+  #print("computing lookup dictionary")
   #n = 0
   #lookup = {}
-  #for k,v in silentusers.iteritems():
+  #for k,v in silentusers.items():
   #  lookup[n] = k
   #  n += 1
   # Free some mem?
   #silentusers = None
   #universe = None
   #universelist = None
-  #print "jaccard"
+  #print("jaccard")
   #simtable = vectorized_jaccard(matrix, ndocs, nfeats)
-  #print "done jaccard, printing"
+  #print("done jaccard, printing")
   #row = 0
   #for r in simtable:
-  #  #print "{}: ".format(id_to_userstr(db, lookup[row])),
+  #  #print("{}: ".format(id_to_userstr(db, lookup[row])),)
   #  for x in range(row+1,simtable.shape[0]):
   #    if r[x] > options.jthreshold:
-  #      #print "{} {} {}".format(lookup[row], id_to_userstr(db, lookup[x]), r[x])
-  #      print "{} {} {}".format(lookup[row], lookup[x], r[x])
+  #      #print("{} {} {}".format(lookup[row], id_to_userstr(db, lookup[x]), r[x]))
+  #      print("{} {} {}".format(lookup[row], lookup[x], r[x]))
   #  row += 1
 

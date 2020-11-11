@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -94,7 +94,7 @@ if __name__ == '__main__':
   else:
     count = len(args)
     if options.ids:
-      uservectors = (db.uservectors.find_one({'id': long(u)}) for u in args)
+      uservectors = (db.uservectors.find_one({'id': int(u)}) for u in args)
     else:
       uservectors = (db.uservectors.find_one({'screen_name_lower': u}) for u in args)
 

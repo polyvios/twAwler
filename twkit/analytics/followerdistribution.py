@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -46,7 +46,7 @@ if __name__ == '__main__':
   if options.followers:
     for user in userlist:
       uname = None if options.ids else user
-      uid = long(user) if options.ids else None
+      uid = int(user) if options.ids else None
       u = lookup_user(db, uid, uname)
       if verbose(): sys.stderr.write("{} followers\n".format(u['screen_name_lower']))
       userids = set(get_followers(db, u['id']))
@@ -58,20 +58,20 @@ if __name__ == '__main__':
       else:
         creationdates += creation_distribution(db, userids)
   else:
-    users = [lookup_user(db, long(user) if options.ids else None, None if options.ids else user) for user in userlist]
+    users = [lookup_user(db, int(user) if options.ids else None, None if options.ids else user) for user in userlist]
     userids = [u['id'] for u in users if u is not None and 'id' in u]
-    #print userids
+    #print(userids)
     creationdates = creation_distribution(db, userids)
 
   if options.common:
     for uid in commonusers:
-      print uid
+      print(uid)
   else:
-    print u'Date,Count'
+    print(u'Date,Count')
     d = min(creationdates)
     end = max(creationdates)
     while d < end:
       cnt = creationdates[d]
-      print u'{},'.format(d.date()),
-      print u'{}'.format(cnt)
+      print(u'{},'.format(d.date()),)
+      print(u'{}'.format(cnt))
       d += timedelta(days=1)

@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -18,6 +18,7 @@ from twkit.analytics.senti import *
 from twkit.analytics.stats import *
 from nltk.tokenize import TweetTokenizer
 from dateutil.relativedelta import relativedelta
+from bson.json_util import dumps
 
 
 if __name__ == '__main__':
@@ -30,7 +31,7 @@ if __name__ == '__main__':
   parser.add_option("-o", "--output", action="store", dest="filename", default=None, help="Set output filename label.")
   parser.add_option("-u", "--user", action="store", dest="user", default=None, help="Only scan one user's tweets.")
   parser.add_option("--dump", action="store", dest="dump", default=None, help="Write all tweet texts into a file.")
-  parser.add_option("--nourl", action="store_true", dest="nourl", default=False, help="Skip all tweets that include a URL.")
+  #parser.add_option("--nourl", action="store_true", dest="nourl", default=False, help="Skip all tweets that include a URL.")
   parser.add_option("--sentiment", action="store_true", dest="sentiment", default=False, help="Compute sentiment of tweets that match.")
   (options, args) = parser.parse_args()
 
@@ -49,7 +50,7 @@ if __name__ == '__main__':
   else:
     after = datetime.utcnow() - timedelta(days=3650)
 
-  words = [x.decode('utf-8').lower() for x in args if u'#' not in x.decode('utf-8')]
+  words = [x.lower() for x in args if u'#' not in x]
 
   tknzr = TweetTokenizer(strip_handles=True, reduce_len=True)
   word_graph = WikiWordGraph('data/word_graph.json')
@@ -58,7 +59,8 @@ if __name__ == '__main__':
   entity_analysis = EntityAnalysis({w:[] for w in words}, word_graph)
 
   if options.dump: dumpfile = open(options.dump, "w")
-  cnt = Counter()                       # total tweets that match, per day
+  cnt = Counter()                       # total tweets without URLs that match, per day
+  urlcnt = Counter()                       # total tweets with URLs that match, per day
   ecnt = defaultdict(lambda: Counter()) # tweets per entity, per day
   grcnt = Counter()                     # total tweets in greek, per day
   if options.sentiment:
@@ -71,7 +73,6 @@ if __name__ == '__main__':
     tweets = get_all_tweets(db, criteria, batch=100)
   for tweet in tweets:
     if 'text' not in tweet: continue
-    if options.nourl and "http" in tweet['text']: continue
     #words_exact = tknzr.tokenize(tweet['text'].lower())
     #words_wiki = [x for w in words_exact for x in word_graph.get(w)]
     d = tweet['created_at']
@@ -84,23 +85,28 @@ if __name__ == '__main__':
 
     entlist = entity_analysis.analyze(tweet['text'])
     if len(entlist):
-      #gprint(entlist)
-      cnt[day] += 1
+      #print(entlist)
+      if "http" in tweet['text']:
+        urlcnt[day] += 1
+      else:
+        cnt[day] += 1
     for e in entlist:
       ecnt[day][e] += 1
       if options.sentiment:
         pos, neg = sentiment_analysis.analyze(tweet['text'])
         daily_entity_sentiment[day][e] = tuple_add(daily_entity_sentiment[day][e], (pos, neg, 1))
-      if options.dump: dumpfile.write((tweet['text']+u'\n').encode('utf-8'))
+      if options.dump:
+        dumpfile.write(dumps(tweet)+u'\n')
       #break # break inner, continue outer loop with next tweet
   if options.dump: dumpfile.close()
 
   first = min(grcnt.keys()) if len(grcnt) else before.replace(day=1,hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
   last = max(grcnt.keys()) if len(grcnt) else after.replace(day=1,hour=0, minute=0, second=0, microsecond=0, tzinfo=None)
   day = relativedelta(months=1) if options.month else relativedelta(days=1)
-  if verbose(): print first, last
+  if verbose(): print(first, last)
   while first <= last:
     cnt[first] = cnt[first] + 0
+    urlcnt[first] = urlcnt[first] + 0
     grcnt[first] = grcnt[first] + 0
     first = first + day
 
@@ -109,24 +115,22 @@ if __name__ == '__main__':
   percent = {}
   norm = {}
   for d in grcnt:
-    percent[d] = 1.0 * cnt[d] / max(grcnt[d], 1.0)
+    percent[d] = 1.0 * (urlcnt[d] + cnt[d]) / max(grcnt[d], 1.0)
   if len(percent):
     avg = numpy.mean(percent.values())
     if avg == 0.0: avg = 1.0
   else:
     avg = 1.0
-  for d in grcnt:
-    norm[d] = percent[d] / avg
   with open(u'data/'+fname+'.csv','w') as f:
-    f.write(u'Date,Greek,Matching,Percent,Normalized')
+    f.write(u'Date,Greek,MatchingTxt,MatchingURL,TotalPercent')
     for w in words:
-      f.write(u',{}'.format(w).encode('utf-8'))
+      f.write(u',{}'.format(w))
     if options.sentiment:
       for e in entity_analysis.entities:
-        f.write(u',{}_pos,{}_neg'.format(e,e).encode('utf-8'))
+        f.write(u',{}_pos,{}_neg'.format(e,e))
     f.write(u'\n')
     for d in sorted(cnt):
-      f.write(u'{},{},{},{},{}'.format(d.date(),grcnt[d],cnt[d],percent[d],norm[d]))
+      f.write(u'{},{},{},{},{}'.format(d.date(),grcnt[d],cnt[d],urlcnt[d],percent[d]))
       for w in words:
         f.write(u',{}'.format(ecnt[d][w]))
       if options.sentiment:

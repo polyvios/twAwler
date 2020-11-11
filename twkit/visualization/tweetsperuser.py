@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -23,7 +23,7 @@ import optparse
 parser = optparse.OptionParser()
 parser.add_option('-v', '--verbose', action='store_true', dest='verbose', default=False, help='List names of tracked users')
 parser.add_option('--vectorized', action='store_true', dest='vectorized', default=False, help='List only vectorized users.')
-parser.add_option('--greek', action='store_true', dest='greek', default=False, help='List only greek users.')
+parser.add_option('-g', '--greek', action='store_true', dest='greek', default=False, help='List only greek users.')
 (options, args) = parser.parse_args()
 
 db,api = init_state(use_cache=False)
@@ -56,7 +56,7 @@ elif options.greek:
       who = c['_id']
       whou = lookup_user(db, who)
       if whou is None:
-        print "missing user: {}".format(who)
+        print("missing user: {}".format(who))
         continue
       crawlercounts.append(c['count'])
       twittercounts.append(whou.get('statuses_count', 0))
@@ -76,7 +76,7 @@ else:
     who = c['_id']
     whou = lookup_user(db, who)
     if whou is None:
-      print "missing user: {}".format(who)
+      print("missing user: {}".format(who))
       continue
     crawlercounts.append(c['count'])
     twittercounts.append(whou.get('statuses_count', 0))

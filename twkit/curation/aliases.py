@@ -31,7 +31,7 @@ for ustr in args:
     if u is None:
       print("No such user: {}".format(ustr))
     else:
-      print(u'{} : {}'.format(u['id'], u['screen_name'])
+      print(u'{} : {}'.format(u['id'], u['screen_name']))
     continue
   if options.id:
     for u in db.users.find({'id': int(ustr)}):

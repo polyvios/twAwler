@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2017-2018 Polyvios Pratikakis
+# (c) 2017-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -41,6 +41,6 @@ if __name__ == '__main__':
     for tid in v['tweet_ids']:
       tw = db.tweets.find_one({'id': tid})
       if options.users:
-        print u'{} {}'.format(tw['user']['id'], tw['source']).encode('utf-8')
+        print(u'{} {}'.format(tw['user']['id'], tw['source']).encode('utf-8'))
       else:
-        print u'{}'.format(tw['source']).encode('utf-8')
+        print(u'{}'.format(tw['source']).encode('utf-8'))

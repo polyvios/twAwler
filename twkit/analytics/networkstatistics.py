@@ -1,21 +1,19 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2017 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
 """
-compute statistics for the network formed by a given set of users
+Compute statistics for the network formed by a given set of users.
 """
 
-import sys
 import optparse
 from datetime import datetime,timedelta
 from twkit.utils import *
 from collections import Counter, defaultdict
 from progress.bar import Bar
-import unicodecsv
 import mmap
 from igraph import *
 
@@ -53,34 +51,34 @@ if __name__ == '__main__':
   verbose(options.verbose)
 
   if len(args) == 0:
-    print "please give file of edges"
+    print("please give file of edges")
 
   #edges = set()
   #nodes = set()
   #weights = defaultdict(lambda:0)
-  #print "count input"
+  #print("count input")
   #lines = mapcount(args[0])
-  #print "{} lines".format(lines)
+  #print("{} lines".format(lines))
 
   twitter_igraph = Graph.Read_Ncol(args[0], directed=True)
 
-  print "loaded"
-  print "density:"
-  print (twitter_igraph.density())
-  print "recirpocity:"
-  print (twitter_igraph.reciprocity())
-  #print "summary:"
-  #print (twitter_igraph.summary())
-  print "assortativity:"
-  print (twitter_igraph.assortativity_degree())
-  print "transitivity:"
-  print (twitter_igraph.transitivity_undirected())
+  print("loaded")
+  print("density:")
+  print(twitter_igraph.density())
+  print("recirpocity:")
+  print(twitter_igraph.reciprocity())
+  #print("summary:")
+  #print(twitter_igraph.summary())
+  print("assortativity:")
+  print(twitter_igraph.assortativity_degree())
+  print("transitivity:")
+  print(twitter_igraph.transitivity_undirected())
 
-  print "radius:"
-  print (twitter_igraph.radius())
-  print "girth:"
-  print (twitter_igraph.girth())
-  print "diameter:"
-  print (twitter_igraph.diameter())
-  #print (twitter_igraph.alpha())
-  #print (twitter_igraph.omega())
+  print("radius:")
+  print(twitter_igraph.radius())
+  print("girth:")
+  print(twitter_igraph.girth())
+  print("diameter:")
+  print(twitter_igraph.diameter())
+  #print(twitter_igraph.alpha())
+  #print(twitter_igraph.omega())

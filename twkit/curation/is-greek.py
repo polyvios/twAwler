@@ -20,6 +20,7 @@ from twkit.analytics.stats import *
 if __name__ == '__main__':
   parser = optparse.OptionParser()
   parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="List names of tracked users")
+  parser.add_option("-q", "--quick", action="store_true", dest="quick", default=False, help="Simply look for inclusion in greek set.")
   parser.add_option("--id", action="store_true", dest="ids", default=False, help="Input is user ids.")
   (options, args) = parser.parse_args()
   if len(args) == 0:
@@ -29,7 +30,7 @@ if __name__ == '__main__':
   db, api = init_state(use_cache=False, ignore_api=True)
   userlist = [x.lower().replace("@", "") for x in args]
   if verbose():
-    print(u'{:<18}\t{}\t{}\t{}\t{}\t{}\t{:<15}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{:>5}\t{:>5}\t{}'.format(
+    print(u'{:<18}\t{}\t{}\t{}\t{}\t{}\t{:<15}\t{}\t{}\t{}\t{}\t{}\t{:>5}\t{:>7}\t{:>7}\t{:>9}\t{}'.format(
       'id',
       'is_gr',
       'trckd',
@@ -60,19 +61,25 @@ if __name__ == '__main__':
       else:
         print("unknown user:", uid, uname)
         continue
+    if options.quick:
+      if is_greek(db, u['id']):
+        print("{}/{} is greek".format(u['id'], id_to_userstr(db, u['id'])))
+      else:
+        print("{}/{} is NOT greek".format(u['id'], id_to_userstr(db, u['id'])))
+      continue
     v = db.uservectors.find_one({'id': u['id']})
     if v is None: 
       fill_follower_stats(db, u)
     else:
       u = v
-    print(u'{:<18}\t{}\t{}\t{}\t{}\t{}\t{:<15}\t{:>7}\t{:>7}\t{:>5}\t{:>5}\t{:>5}\t{:>7}\t{:>6}\t{:>6.1f}\t{:>8.1f}\thttps://www.twitter.com/{}'.format(
+    print(u'{:<18}\t{}\t{}\t{}\t{}\t{}\t{:<15}\t{:>7}\t{:>7}\t{:>5}\t{:>5}\t{:>5}\t{:>7}\t{:>7.2f}\t{:>7.2f}\t{:>9.2f}\thttps://www.twitter.com/{}'.format(
       u['id'],
       is_greek(db, u['id']),
       get_tracked(db, u['id']) is not None,
       is_dead(db, u['id']),
       is_suspended(db, u['id']),
       is_protected(db, u['id']),
-      u['screen_name_lower'],
+      u.get('screen_name'),
       u['seen_fr'],
       u['seen_fo'],
       u['fr_or_fo'],

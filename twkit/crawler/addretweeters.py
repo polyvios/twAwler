@@ -67,7 +67,8 @@ if __name__ == '__main__':
     tweets = db.tweets.find({'created_at': {'$gt': datetime.now() - timedelta(days=1)}, 'retweet_count': {'$gt': 50}, 'retweeted_status': None, 'lang': config.lang}, {'id': 1, 'retweet_count':1, 'text': 1}).sort('retweet_count', -1).limit(options.top)
     for t in tweets:
       twid = t['id']
-      if verbose(): gprint(t['text'])
+      if verbose():
+        print(t['text'])
       addretweeters(db, api, twid)
   else:
     for twid in args:

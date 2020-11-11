@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -89,7 +89,7 @@ def iter_scan_greeks_followers(followable):
         frc = fu['friends_count']
       ratio = 1.0 * grfr / fr
       ratioc = 1.0 * grfr / frc
-      print u'{} {} {} {} {} {}'.format(grfr, fr, ratio, frc, ratioc, f)
+      print(u'{} {} {} {} {} {}'.format(grfr, fr, ratio, frc, ratioc, f))
     seen |= fo
 
 if __name__ == '__main__':
@@ -100,15 +100,15 @@ if __name__ == '__main__':
   verbose(options.verbose)
   db, api = init_state(use_cache=False, ignore_api=True)
   if verbose():
-    print u'{} {} {} {} {} {}'.format('grfr', 'fr-seen', 'ratio', 'fr-tw', 'ratio-tw', 'friend-id')
+    print(u'{} {} {} {} {} {}'.format('grfr', 'fr-seen', 'ratio', 'fr-tw', 'ratio-tw', 'friend-id'))
   iter_scan_greeks_followers(options.followable)
-  #if verbose(): print "Aggregation starting"
+  #if verbose(): print("Aggregation starting")
   #follow = db.follow.aggregate([
   #  { '$group': { '_id': { 'id': '$id', 'follows': '$follows' } } }
   #], allowDiskUse=True)
   #followers = scan_greeks_followers()
   #followers = full_scan_greeks_followers()
   #for u, cnt in followers.most_common():
-    #print u'{} {}'.format(cnt, u)
+    #print(u'{} {}'.format(cnt, u))
 
 
