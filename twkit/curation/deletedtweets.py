@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -35,11 +35,11 @@ if __name__ == '__main__':
   api = tweepy.API(auth)
 
   for user in args:
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     uname = None if options.ids else user
     u = lookup_user(db, uid, uname)
     if u is None:
-      print uid, uname, "not found"
+      print(uid, uname, "not found")
     if options.scan:
       tweets = db.tweets.find({'user.id': u['id'], 'deleted': None}).sort('created_at', 1)
       idlist = []
@@ -47,10 +47,10 @@ if __name__ == '__main__':
         idlist.append(t['id'])
         if len(idlist) == 100:
           idlist = add100(db, api, twitterapi, idlist)
-          print u'found {} deleted'.format(len(idlist))
+          print(u'found {} deleted'.format(len(idlist)))
           idlist = []
       idlist = add100(db, api, twitterapi, idlist)
-      print u'found {} deleted'.format(len(idlist))
+      print(u'found {} deleted'.format(len(idlist)))
       idlist = []
 
     tweets = db.tweets.find({'deleted': True, 'user.id': u['id']}).sort('created_at', 1)
@@ -58,5 +58,5 @@ if __name__ == '__main__':
       tweets = Bar("Processing:", max=tweets.count(), suffix = '%(index)d/%(max)d - %(eta_td)s').iter(tweets)
     for t in tweets:
       if options.nort and 'retweeted_status' in t: continue
-      print u'{} {} {}: {}'.format(t.get('id', '-'), t.get('created_at', None), u['screen_name_lower'], t.get('text', '<not found>')).encode('utf-8')
+      print(u'{} {} {}: {}'.format(t.get('id', '-'), t.get('created_at', None), u['screen_name_lower'], t.get('text', '<not found>')).encode('utf-8'))
 

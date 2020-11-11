@@ -1,7 +1,7 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2017 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -34,7 +34,7 @@ def add1(db, api, tw):
     if isinstance(e.message, list):
       m = e.message[0]
       if 'code' in m and m['code'] in [ 144, 34 ]:
-        print "found deleted!"
+        print("found deleted!")
         db.tweets.update_one({'id': tw['id']}, {'$set': {'deleted': True}})
     handle_twitter_error(db, api, e, tw['user']['id'], 'statuses/show/:id', None)
   return
@@ -46,12 +46,12 @@ def add100(db, api, twitterapi, idlist):
     tweets = api.statuses_lookup(id_=idlist, trim_user=True)
   except tweepy.error.RateLimitError:
     x = twitterapi.CheckRateLimit('/statuses/lookup').reset
-    if verbose(): print "rate limit, wait {} seconds".format(x)
+    if verbose(): print("rate limit, wait {} seconds".format(x))
     time.sleep(x)
     add100(db, api, twitterapi, idlist)
     return
   except tweepy.error.TweepError as e:
-    if verbose(): print 'other error {}'.format(str(e))
+    if verbose(): print('other error {}'.format(str(e)))
     time.sleep(2)
     return
   bulk = db.tweets.initialize_unordered_bulk_op()
@@ -64,7 +64,7 @@ def add100(db, api, twitterapi, idlist):
     idlist.remove(tw.id)
   for i in idlist:
     if verbose():
-      print 'tweet {} not found'.format(i)
+      print('tweet {} not found'.format(i))
     bulk.find({'id':i}).upsert().update({'$set': {'deleted': True}})
   sys.stdout.flush()
   bulk.execute()
@@ -89,15 +89,15 @@ def repopulate(db, api, twitterapi, uid=None, skip=False):
     for tw in q:
       i = tw['id']
       if is_suspended(db, tw['user']['id']):
-        if verbose(): print "ignore suspended"
+        if verbose(): print("ignore suspended")
         continue
       if is_protected(db, tw['user']['id']):
-        #print "ignore protected"
+        #print("ignore protected")
         continue
       if is_dead(db, tw['user']['id']):
-        #print "ignore dead"
+        #print("ignore dead")
         continue
-      print tw['text']
+      print(tw['text'])
       #idlist.append(i)
       add1(db, twitterapi, tw)
       cont = True
@@ -120,9 +120,9 @@ if __name__ == '__main__':
     repopulate(db, api, twitterapi, None, options.skip)
   else:
     for userstr in args:
-      u = lookup_user(db, uid=long(userstr)) if options.ids else lookup_user(db, uname=userstr)
+      u = lookup_user(db, uid=int(userstr)) if options.ids else lookup_user(db, uname=userstr)
       if u is None:
-        print "unknown user", userstr
+        print("unknown user", userstr)
         continue
       uid = u['id']
       if verbose(): print('repopulate id {}'.format(uid))

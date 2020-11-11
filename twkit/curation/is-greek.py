@@ -1,7 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2017 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -14,7 +14,6 @@ import optparse
 from progress.bar import Bar
 from collections import Counter
 from datetime import datetime,timedelta
-from sets import Set
 from twkit import *
 from twkit.analytics.stats import *
 
@@ -30,7 +29,7 @@ if __name__ == '__main__':
   db, api = init_state(use_cache=False, ignore_api=True)
   userlist = [x.lower().replace("@", "") for x in args]
   if verbose():
-    print u'{:<18}\t{}\t{}\t{}\t{}\t{}\t{:<15}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{:>5}\t{:>5}\t{}'.format(
+    print(u'{:<18}\t{}\t{}\t{}\t{}\t{}\t{:<15}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{:>5}\t{:>5}\t{}'.format(
       'id',
       'is_gr',
       'trckd',
@@ -47,11 +46,11 @@ if __name__ == '__main__':
       'gr_fr%',
       'gr_fo%',
       'gr_frfo%',
-      'url')
-    print u'-'*180
+      'url'))
+    print(u'-'*180)
 
   for user in userlist:
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     uname = None if options.ids else user
     u = get_tracked(db, uid, uname)
     if u == None:
@@ -59,14 +58,14 @@ if __name__ == '__main__':
       if x:
         u = { 'id': x['id'], 'screen_name_lower': x['screen_name'].lower() }
       else:
-        print "unknown user:", uid, uname
+        print("unknown user:", uid, uname)
         continue
     v = db.uservectors.find_one({'id': u['id']})
     if v is None: 
       fill_follower_stats(db, u)
     else:
       u = v
-    print u'{:<18}\t{}\t{}\t{}\t{}\t{}\t{:<15}\t{:>7}\t{:>7}\t{:>5}\t{:>5}\t{:>5}\t{:>7}\t{:>6}\t{:>6.1f}\t{:>8.1f}\thttps://www.twitter.com/{}'.format(
+    print(u'{:<18}\t{}\t{}\t{}\t{}\t{}\t{:<15}\t{:>7}\t{:>7}\t{:>5}\t{:>5}\t{:>5}\t{:>7}\t{:>6}\t{:>6.1f}\t{:>8.1f}\thttps://www.twitter.com/{}'.format(
       u['id'],
       is_greek(db, u['id']),
       get_tracked(db, u['id']) is not None,
@@ -83,5 +82,5 @@ if __name__ == '__main__':
       u['gr_fr_pcnt'],
       u['gr_fo_pcnt'],
       u['gr_fr_fo_pcnt'],
-      u['screen_name_lower'])
+      u['screen_name_lower']))
     

@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -27,6 +27,6 @@ for image in db.images.find():
   files = [x for x in glob.glob(u"images/{}/{}.*".format(letter, fname))]
   if len(files) == 0:
     missing += 1
-    print u"Missing file({}/{}): {}: {} -> images/{}/{}.*".format(missing, total, image['date'], image['screen_name'], letter, image['image'])
+    print(u"Missing file({}/{}): {}: {} -> images/{}/{}.*".format(missing, total, image['date'], image['screen_name'], letter, image['image']))
   if len(files) > 1:
-    print u"More than one file! {}: {} -> {}".format(image['date'], image['screen_name'], files) 
+    print(u"More than one file! {}: {} -> {}".format(image['date'], image['screen_name'], files))

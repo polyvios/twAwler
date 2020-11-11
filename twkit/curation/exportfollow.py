@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -23,8 +23,8 @@ if __name__ == '__main__':
   parser.add_option("-o", "--output", action="store", dest="filename", default='follow.txt', help="Output file")
   parser.add_option("-b", "--before", action="store", dest="before", default=False, help="Before given date.")
   parser.add_option("-a", "--after", action="store", dest="after", default=False, help="After given date.")
-  parser.add_option("-s", "--skip", action="store", dest="skip", type="long", default=None, help="After given date.")
-  parser.add_option("--atid", action="store", dest="atid", type="long", default=None, help="After given user id.")
+  parser.add_option("-s", "--skip", action="store", dest="skip", type="int", default=None, help="After given date.")
+  parser.add_option("--atid", action="store", dest="atid", type="int", default=None, help="After given user id.")
   (options, args) = parser.parse_args()
 
   verbose(options.verbose)

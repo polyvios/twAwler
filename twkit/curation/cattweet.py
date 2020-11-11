@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     parser.print_help()
     sys.exit(1)
 
-  tweetid = long(args[0])
+  tweetid = int(args[0])
 
   for tw in db.tweets.find({'id': tweetid}):
-    MyPrettyPrinter().pprint(tw)
+    print(tw)

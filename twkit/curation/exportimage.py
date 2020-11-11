@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2019 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -22,7 +22,7 @@ def checkuser(db, src):
     for x in db.users.find({'screen_name': src}).collation({'locale': 'en', 'strength': 1}).limit(1):
       srcu = x
     if srcu is None:
-      print "Unknown user:", src
+      print("Unknown user:", src)
   return srcu
 
 
@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
   if options.ids:
     done_images = set('0000000009098-2019-01-26')
-    users = (long(i) for i in args)
+    users = (int(i) for i in args)
     if verbose():
       users = Bar("Greek:", max=len(args), suffix = '%(index)d/%(max)d - %(eta_td)s').iter(users)
     with open(options.filename, "w") as outf:
