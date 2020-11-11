@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -10,9 +10,11 @@ Count how many tweets are in the DB per followed user.
 """
 
 import optparse
+from datetime import datetime
 from twkit.utils import *
 
 if __name__ == "__main__":
+  start_time = datetime.utcnow()
   parser = optparse.OptionParser()
   parser.add_option('-v', '--verbose', action='store_true', dest='verbose', default=False, help='List names of tracked users')
   parser.add_option('-a', '--all', action='store_true', dest='all', default=False, help='List all.')
@@ -20,13 +22,20 @@ if __name__ == "__main__":
 
   db, _ = init_state(use_cache=False, ignore_api=True)
   cursor = db.tweets.aggregate(
-    [{ '$group':
+    [{ '$match':
+      { 'created_at': {
+        '$gte': datetime(2018, 1, 1), '$lt': datetime(2019, 1, 1)
+        }
+      }
+     },
+     { '$group':
       { '_id': '$user.id',
         'count': {'$sum': 1}
       }
     }],
     allowDiskUse=True
   )
+  cursor = cursor.batch_size(5)
   for c in cursor:
     whoid = c['_id']
     cnt = c['count']
@@ -38,5 +47,6 @@ if __name__ == "__main__":
     else:
       u = get_tracked(db, whoid)
       if u is None: continue 
-    print cnt, u.get('screen_name_lower','<unknown>'), u.get('id', whoid), u.get('statuses_count')
+    print(cnt, u.get('screen_name_lower','<unknown>'), u.get('id', whoid), u.get('statuses_count'))
 
+  update_crawlertimes(db, "tweets", start_time)

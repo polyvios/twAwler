@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -32,9 +32,9 @@ if __name__ == "__main__":
   if len(args) > 100:
     idlist = []
     for idstr in args:
-      userid = long(idstr)
+      userid = int(idstr)
       if is_dead(db, userid):
-        if verbose(): print u'user dead, skip'
+        if verbose(): print(u'user dead, skip')
         continue
       idlist.append(userid)
       if len(idlist) > 99:
@@ -44,6 +44,6 @@ if __name__ == "__main__":
       add100_id(db, api, idlist)
   else:
     for idstr in args:
-      userid = long(idstr)
+      userid = int(idstr)
       add_id(db, api, userid, force=options.force)
 

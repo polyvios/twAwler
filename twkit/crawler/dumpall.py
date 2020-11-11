@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -26,7 +26,7 @@ def dumpall(db, api, uid, uname, max_req=-1):
     uid = x['id']
     uname = x['screen_name_lower']
   else:
-    if verbose(): print "Unknown user", uname, uid, x, "first add user for tracking. Abort."
+    if verbose(): print("Unknown user", uname, uid, "first add user for tracking. Abort.")
     return
   add_id(db, api, uid, wait=False)
   cdata = db.crawlerdata.find_one({ 'id': uid })
@@ -36,7 +36,7 @@ def dumpall(db, api, uid, uname, max_req=-1):
   count = 0
   flag = is_greek(db, uid)
   posts = []
-  print "Dump {:<20}".format(uname),
+  print("Dump {:<20}".format(uname), end='')
   while max_req != 0:
     sys.stdout.flush()
     max_req -= 1
@@ -46,14 +46,14 @@ def dumpall(db, api, uid, uname, max_req=-1):
         since_id=last-1 if last != None and last != 0 else None,
         max_id=maxid,
         count=200)
-      print ".",
+      print(". ", end='')
     except twitter.TwitterError as e:
-      if verbose(): print "exception for", uname, e, uid,
+      if verbose(): print("exception {} for {}/{}".format(e, uname, uid), end='')
       repeatf = lambda x: dumpall(db, api, uid, uname, max_req)
       handle_twitter_error(db, api, e, uid, 'statuses/user_timeline', repeatf)
       return
     except:
-      if verbose(): print "some other error, retrying",sys.exc_info()[0],
+      if verbose(): print("some other error, retrying {}".format(sys.exc_info()[0]), end='')
       time.sleep(2)
       continue
     db.crawlerdata.update_one({'id': uid}, { '$set': {'id': uid, 'latest': datetime.utcnow() }}, upsert=True)
@@ -72,12 +72,12 @@ def dumpall(db, api, uid, uname, max_req=-1):
       try:
         bulk.insert(j)
       except:
-        if verbose(): print "some issue", j, sys.exc_info()[0]
+        if verbose(): print("some issue for {}: {}".format(j, sys.exc_info()[0]))
         pass
     try:
       bulk.execute()
     except BulkWriteError as bwe:
-      if verbose(): print bwe.message,
+      if verbose(): print(bwe.details, end='')
       pass
     if maxid <= last: break
   if(count > 0):
@@ -85,9 +85,9 @@ def dumpall(db, api, uid, uname, max_req=-1):
       {'id': uid},
       {'$set': {'lastid': newlast}}
     )
-    print "Found", count, "tweets" if flag else "NON-GR tweets"
+    print("Found", count, "tweets" if flag else "NON-GR tweets")
   else:
-    print "no tweets found"
+    print("no tweets found")
   sys.stdout.flush()
   return
 
@@ -110,11 +110,11 @@ if __name__ == '__main__':
     options.ids = True
     userlist = (x['id'] for x in db.frequences.find().sort('hours', pymongo.DESCENDING).limit(options.late))
   for user in userlist:
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     uname = None if options.ids else user
     r = db.frequences.delete_one({'id': uid})
     if r.deleted_count == 0 and (options.late or options.expected):
-      if verbose: print "Missing from frequences, skip"
+      if verbose(): print("Missing from frequences, skip")
       continue
     if options.req:
       dumpall(db, api, uid, uname, max_req=options.req)

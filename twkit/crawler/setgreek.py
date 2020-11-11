@@ -28,24 +28,24 @@ if __name__ == '__main__':
 
   userlist = [x.lower().replace("@", "") for x in args]
   for user in userlist:
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     uname = None if options.ids else user
     u = get_tracked(db, uid, uname)
     if u is None:
-      if verbose(): print "User not tracked, still marking",
+      if verbose(): print("User not tracked, still marking ", end='')
       u = lookup_user(db, uid, uname)
     if u is None:
-      print "Unknown user {} {} first add user for tracking".format(uid, uname)
+      print("Unknown user {} {} first add user for tracking".format(uid, uname))
       continue
     if is_greek(db, u['id']):
-      if verbose(): print "{} already marked".format(user)
+      if verbose(): print("{} already marked".format(user))
     elif is_ignored(db, u['id']):
-      if verbose(): print "{} ignored".format(user)
+      if verbose(): print("{} ignored".format(user))
     else:
       db.greeks.insert_one({'id': u['id']})
       for us in db.users.find({'id': u['id'], 'screen_name_lower': {'$gt': ''}}):
         db.greeks.update_one(
           {'id': u['id']},
           {'$set':{'id': u['id'], 'screen_name': us['screen_name_lower']}})
-        print us['screen_name_lower'], "added to greek set"
+        print(us['screen_name_lower'], "added to greek set")
 

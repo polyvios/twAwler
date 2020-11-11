@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2017 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -12,6 +12,7 @@ Create a file (default follow.txt) with all follow edges, encoded as
 
 import sys
 import optparse
+import dateutil.parser
 from progress.bar import Bar
 from twkit.utils import *
 
@@ -20,13 +21,32 @@ if __name__ == '__main__':
   parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="Make noise.")
   parser.add_option("-g", "--greek", action="store_true", dest="greek", default=False, help="Only get the part of the graph that is followed or marked greek")
   parser.add_option("-o", "--output", action="store", dest="filename", default='follow.txt', help="Output file")
+  parser.add_option("-b", "--before", action="store", dest="before", default=False, help="Before given date.")
+  parser.add_option("-a", "--after", action="store", dest="after", default=False, help="After given date.")
+  parser.add_option("-s", "--skip", action="store", dest="skip", type="int", default=None, help="After given date.")
+  parser.add_option("--atid", action="store", dest="atid", type="int", default=None, help="After given user id.")
   (options, args) = parser.parse_args()
 
   verbose(options.verbose)
   db, _ = init_state(use_cache=True, ignore_api=True)
 
+  criteria = {}
+  if options.before:
+    criteria['$lte'] = dateutil.parser.parse(options.before)
+  if options.after:
+    criteria['$gt'] = dateutil.parser.parse(options.after)
+
   num = db.follow.count()
-  edges = db.follow.find({}, {'id':1, 'follows':1}).sort('id', 1)
+  if options.before or options.after:
+    edges = db.follow.find({'date': criteria}, {'id':1, 'follows': 1})
+    #edges = db.follow.aggregate([ { '$sort': { 'id' : 1} }, { '$match' : { 'date' : criteria } } ], hint='id_1_date_1_follows_1')
+  else:
+    if options.atid:
+      edges = db.follow.find({'id': {'$gte': options.atid}}, {'id':1, 'follows':1}).sort('id', 1).batch_size(100)
+    else:
+      edges = db.follow.find({}, {'id':1, 'follows':1}).sort('id', 1).batch_size(100)
+  if options.skip:
+    edges = edges.skip(options.skip)
   if verbose():
     edges = Bar("Processing:", max=num, suffix = '%(index)d/%(max)d - %(eta_td)s').iter(edges)
   outf = open(options.filename, "w")

@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -11,6 +11,7 @@ Use flag --suspended to check if suspended users are still suspended, instead.
 """
 
 import optparse
+import time
 from progress.bar import Bar
 from datetime import datetime, timedelta
 from twkit.utils import *
@@ -35,10 +36,20 @@ if __name__ == '__main__':
   if verbose():
     userlist = Bar("Loading:", max=userlist.count(), suffix = '%(index)d/%(max)d - %(eta_td)s').iter(userlist)
 
+  api.InitializeRateLimit()
+  resource = u'/users/show/:id'
+
   for user in userlist:
-    uid = long(user['id'])
+    uid = int(user['id'])
     if not options.suspended and is_protected(db, uid): continue
     if options.suspended and is_suspended(db, uid): continue
+    l = api.rate_limit.get_limit(resource)
+    if l.remaining < l.limit:
+      left = l.reset - timegm(gmtime())
+      sec = left - l.remaining
+      if l.remaining > 5 and sec > 2 and left > l.remaining:
+        print("sleeping {} secs".format(sec))
+        time.sleep(sec)
     follow_user(db, api, uid=uid, wait=True, refollow=True)
     if options.stopafter:
       current += 1

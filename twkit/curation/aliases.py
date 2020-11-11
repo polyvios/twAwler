@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2017 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -25,38 +25,38 @@ for ustr in args:
   cnt = 0
   if options.quick:
     if options.id:
-      u = lookup_user(db, uid=long(ustr))
+      u = lookup_user(db, uid=int(ustr))
     else:
       u = lookup_user(db, uname=ustr)
     if u is None:
-      print "No such user: {}".format(ustr)
+      print("No such user: {}".format(ustr))
     else:
-      print u'{} : {}'.format(u['id'], u['screen_name'])
+      print(u'{} : {}'.format(u['id'], u['screen_name'])
     continue
   if options.id:
-    for u in db.users.find({'id': long(ustr)}):
+    for u in db.users.find({'id': int(ustr)}):
       cnt += 1
       if not options.reverse:
         if 'screen_name_lower' in u:
-          print u['screen_name_lower'], u['id']
+          print(u['screen_name_lower'], u['id'])
         else:
-          print u'was: {} {}'.format(u['screen_name'], u['id'])
+          print(u'was: {} {}'.format(u['screen_name'], u['id']))
   else:
     for u1 in db.users.find({'screen_name_lower': ustr.lower()}):
       for u2 in db.users.find({'id': u1['id']}):
         cnt += 1
         if not options.reverse:
-          print u2['screen_name'], u1['id']
+          print(u2['screen_name'], u1['id'])
     #nameregex = re.compile(r'^{}$'.format(ustr.lower()), re.IGNORECASE)
     for u1 in db.users.find({'screen_name': ustr.lower()}).collation({'locale': 'en', 'strength': 1}):
       for u2 in db.users.find({'id': u1['id']}):
         cnt += 1
         if not options.reverse:
-          print u2['screen_name'], u1['id']
+          print(u2['screen_name'], u1['id'])
   if verbose():
-    print "Found", cnt
+    print("Found", cnt)
   if options.reverse and cnt == 0:
-    if is_dead(db, long(ustr)): continue
-    if is_suspended(db, long(ustr)): continue
-    print ustr
+    if is_dead(db, int(ustr)): continue
+    if is_suspended(db, int(ustr)): continue
+    print(ustr)
 

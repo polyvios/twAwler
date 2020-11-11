@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -36,9 +36,9 @@ if __name__ == '__main__':
       if m:
         uname = m.group(1)
         twid = m.group(2)
-        print u'found'
-        print u'uname : {}'.format(uname)
-        print u'id    : {}'.format(twid)
-        print u'quoter: {}'.format(tw['id'])
-        print u'-----'
+        print(u'found')
+        print(u'uname : {}'.format(uname))
+        print(u'id    : {}'.format(twid))
+        print(u'quoter: {}'.format(tw['id']))
+        print(u'-----')
         db.tweets.update_one(tw, {'$set': {'quoted_status_id': twid}})

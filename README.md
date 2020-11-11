@@ -41,7 +41,8 @@ sudo apt install mongodb
 ```
 
 Then install all packages listed in
-[doc/dependencies.txt](doc/dependencies.txt), using pip, apt, yum,
+[doc/dependencies.txt](doc/dependencies.txt) and
+[requirements.txt](requirements.txt), using pip, apt, yum,
 rpm, source packages, or any other way you prefer.  For example:
 ```bash
 pip install sklearn
@@ -147,3 +148,19 @@ For the follow graph:
 twkit/curation/exportfollow.py
 ```
 
+For the quote graph corresponding to quotes tweeted during the first
+week of 2019:
+```
+twkit/curation/exportquote.py --after=2019-01-01 --before=2019-01-08 -o quotegraph.txt
+```
+
+All command-line modules support a ``--help`` or ``-h`` switch and
+also contain pydoc documentation.  So to read a brief description for
+the ``bin/dumpall.py``, type
+```
+pydoc twkit.crawler.dumpall
+```
+or
+```
+pydoc bin/dumpall.py
+```

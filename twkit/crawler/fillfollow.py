@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -21,7 +21,7 @@ from pymongo.errors import CursorNotFound
 #def fill_follow(db, api, uid, uname):
 #  u = lookup_user(db, uid, uname)
 #  if u is None:
-#    print "User {} not found".format(uid if uname is None else uname)
+#    print("User {} not found".format(uid if uname is None else uname))
 #    return
 #  scan = db.follow.find({'follows': u['id']})
 
@@ -39,9 +39,9 @@ if __name__ == '__main__':
   u = None
   if len(args):
     user = args[0]
-    u = lookup_user(db, uid=long(user)) if options.ids else lookup_user(db, uname=user)
+    u = lookup_user(db, uid=int(user)) if options.ids else lookup_user(db, uname=user)
     if u is None:
-      print "Not found"
+      print("Not found")
       sys.exit(1)
     scan = db.follow.find({'follows': u['id']})
   else:
@@ -53,10 +53,10 @@ if __name__ == '__main__':
     try:
       for fol in Bar("Loading:", max=scan.count(), suffix = '%(index)d/%(max)d - %(eta_td)s').iter(scan):
         if user_is_missing(db, fol['id']) and fol['id'] not in idlist:
-          if verbose(): print fol['id']
+          if verbose(): print(fol['id'])
           idlist.append(fol['id'])
         if user_is_missing(db, fol['follows']) and fol['follows'] not in idlist:
-          if verbose(): print fol['follows']
+          if verbose(): print(fol['follows'])
           idlist.append(fol['follows'])
         if len(idlist) > 98:
           add100_id(db, api, idlist)
@@ -66,7 +66,7 @@ if __name__ == '__main__':
         add100_id(db, api, idlist)
       break
     except CursorNotFound:
-      print "lost cursor, restart from", skipno
+      print("lost cursor, restart from", skipno)
       if u:
         scan = db.follow.find({'follows': u['id']}).skip(skipno)
       else:

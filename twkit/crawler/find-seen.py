@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -15,11 +15,13 @@ import sys
 import optparse
 from progress.bar import Bar
 from collections import Counter
+from datetime import datetime, timedelta
 import twkit
 import twkit.utils
 from twkit.utils import *
 
 if __name__ == '__main__':
+  start_time = datetime.utcnow()
   parser = optparse.OptionParser()
   parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="Make noise")
   parser.add_option("-o", "--output", action="store", dest="outputfile", default="seen.out", help="Output File")
@@ -32,19 +34,24 @@ if __name__ == '__main__':
     user = options.user.lower().replace("@","")
     x = db.following.find_one({ 'screen_name_lower' : user })
     if x == None:
-      print "Unknown user, first add user for tracking. Abort."
+      print("Unknown user, first add user for tracking. Abort.")
       sys.exit(1)
 
-  names=twkit.utils.cache['names']
-  ids=twkit.utils.cache['ids']
-  ignored=twkit.utils.cache['ign']
-  dead=twkit.utils.cache['dead']
-  suspended=twkit.utils.cache['susp']
-  protected=twkit.utils.cache['prot']
-  greek=twkit.utils.cache['gr']
+  cache = twkit.utils.get_cache()
+
+  names=cache['names']
+  ids=cache['ids']
+  ignored=cache['ign']
+  dead=cache['dead']
+  suspended=cache['susp']
+  protected=cache['prot']
+  greek=cache['gr']
+
   seen = Counter()
   unseen = Counter()
-  cursor = db.tweets.find({'retweeted_status.lang': config.lang}, {'user':1, 'retweeted_status': 1})
+  cursor = db.tweets.find({'retweeted_status.lang': config.lang, 'created_at': {'$gt': datetime.now()-timedelta(days=30)}}, {'user.id':1, 'retweeted_status.user.id': 1}).sort('user.id', 1)
+  #cursor2 = db.tweets.find({'retweeted_status.lang': config.lang}, {'user.id':1, 'retweeted_status.user.id': 1}).sort('user.id', 1)
+
   if verbose():
     cursor = Bar("Adding:", max = cursor.count(), suffix = '%(index)d/%(max)d - %(eta_td)s ').iter(cursor)
   for tweet in cursor:
@@ -71,7 +78,7 @@ if __name__ == '__main__':
     seen[rtdid] += 1
 
   with open(options.outputfile, "w") as f:
-    for key, value in sorted(seen.iteritems(), key=lambda (k,v): (v,k)):
+    for key, value in sorted(seen.items(), key=lambda x: x[1]):
       f.write(u'{:7} {:20} ('.format(value, key))
       for u in db.users.find({'id': key}):
         f.write(u'{} '.format(u['screen_name'].lower()))
@@ -86,4 +93,6 @@ if __name__ == '__main__':
 
   if verbose():
     for i in unseen:
-      print "unseen", i, unseen[i], 'ign' if i in ignored else ''
+      print("unseen", i, unseen[i], 'ign' if i in ignored else '')
+
+  update_crawlertimes(db, "seen", start_time)

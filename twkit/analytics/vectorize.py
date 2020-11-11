@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2019 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -12,6 +12,7 @@ uservectors collection.
 
 import sys
 import optparse
+from progress.bar import Bar
 from datetime import datetime,timedelta
 from twkit.utils import *
 from twkit.analytics.stats import *
@@ -81,6 +82,8 @@ if __name__ == '__main__':
   parser.add_option("-a", "--after", action="store", dest="after", default=False, help="After given date.")
   parser.add_option("--id", action="store_true", dest="ids", default=False, help="Input is user ids.")
   parser.add_option("--all", action="store_true", dest="all", default=False, help="Re-vectorize all stale vectors (older than 1 month)")
+  parser.add_option("--skip", action="store", type="int", dest="skip", default=None, help="Skip given number of users (for parallelization)")
+  parser.add_option("--stopafter", action="store", dest="stopafter", type="int", default=None, help="Stop after scanning how many")
   parser.add_option("--query", action="store", dest="query", default="{}", help="Select who to vectorize")
   parser.add_option("--greek", action="store_true", dest="greek", default=False, help="Ignore any users not marked as greek")
   parser.add_option("--purge", action="store_true", dest="purge", default=False, help="Clean database")
@@ -114,14 +117,21 @@ if __name__ == '__main__':
     q = {}
     if options.query:
       q = json.loads(options.query)
-    userlist = (x['id'] for x in db.uservectors.find(q, {'id':1}))
-    options.ids = True
+      if verbose():
+        gprint(q)
+    it = db.uservectors.find(q, {'id':1}).sort('id', 1)
+    if options.skip > 0:
+      it = it.skip(options.skip)
+    if options.stopafter:
+      it = it.limit(options.stopafter)
+    userlist = (x['id'] for x in it)
+    #options.ids = True
   elif options.queue:
     if options.dumpgraph:
       print "Save and queue options are incompatible. Aborting."
       sys.exit(2)
     userlist = (x['id'] for x in db.vectorizequeue.find())
-    options.ids = True
+    #options.ids = True
   else:
     userlist = []
     for x in args:
@@ -129,13 +139,19 @@ if __name__ == '__main__':
       if options.ids:
         u = long(x)
       else:
-        u = db.following.find_one({'screen_name_lower': x})
-        if u: 
-          u = u.get('screen_name_lower')
+        u = get_tracked(db, uname=x)
+        if u is None:
+          u = lookup_user(db, uname=x)
+        #u = db.following.find_one({'screen_name_lower': x})
+        if u is not None: 
+          u = u.get('id')
         else:
           print u'Unknown user {}'.format(x)
       if u: userlist.append(u)
 
+  userlist = list(userlist)
+  if verbose():
+    userlist = Bar("Process user:", max=len(userlist), suffix = '%(index)d/%(max)d - %(eta_td)s').iter(userlist)
   if options.dumpgraph and options.filename:
     with open(options.filename, "a") as f:
       f.write("digraph {\n")
@@ -175,9 +191,9 @@ if __name__ == '__main__':
     vectorwriter.writeheader()
   for user in userlist:
     now = datetime.utcnow()
-    uid = long(user) if options.ids else None
-    uname = None if options.ids else user
-    x = lookup_user(db, uid, uname)
+    uid = long(user) # if options.ids else None
+    #uname = None if options.ids else user
+    x = lookup_user(db, uid)
     if x and 'screen_name' in x:
       u = { 'id': x['id'], 'screen_name': x['screen_name'] }
     else:
@@ -190,7 +206,7 @@ if __name__ == '__main__':
         if vect['vector_timestamp'] + timedelta(days=30) > now: 
           if verbose():
             print "Found cached version produced less than a month ago, skip"
-          u = db.uservectors.find_one({'id': u['id']})
+          u = db.uservectors.find_one({'id': long(u['id'])})
         else:
           print "Found stale cached version, recompute"
           vectorize_func(db, u, criteria, options.entity_file)

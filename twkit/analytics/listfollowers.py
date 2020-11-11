@@ -12,6 +12,7 @@ Output is edges in "follower-id user-id" syntax: direction of "follow" to the ri
 
 import sys
 import optparse
+import fileinput
 import unicodecsv
 import dateutil.parser
 from twkit.utils import *
@@ -95,26 +96,7 @@ def save_csv(db, userids, filename):
       del flr['_id']
       if 'downloaded_profile_date' in flr: del flr['downloaded_profile_date']
       vectorwriter.writerow(flr)
-
-def save_dot(db, graph, addusers):
-  print "digraph {"
-  for uid in graph:
-    n1 = id_to_userstr(db, uid)
-    for i in graph[uid]:
-      if addusers:
-        if is_dead(db, i): continue
-        if is_suspended(db, i): continue
-        if get_tracked(db, i): continue
-        u = lookup_user(db, i)
-        try:
-          add_to_followed(db, i, u['screen_name'].lower(), is_protected(db, i))
-        except:
-          follow_user(db, api, i)
-      else:
-        n2 = id_to_userstr(db, i)
-        print u'"{}/{}" -> "{}/{}";'.format(uid, n1, i, n2)
-        #print u'{} {}'.format(uid, i)
-  print "}"
+  return
 
 
 def get_userlist_followers(db, userlist, options, criteria):
@@ -152,9 +134,10 @@ def get_userlist_followers(db, userlist, options, criteria):
  
 if __name__ == '__main__':
   parser = optparse.OptionParser()
-  parser.add_option("--addusers", action="store_true", dest="addusers", default=False, help="Add all followers to tracked users.")
-  parser.add_option("--id", action="store_true", dest="ids", default=False, help="Arguments are user id not user names.")
   parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="Make noise.")
+  parser.add_option("--fromfile", action="store_true", dest="fromfile", default=False, help="Args are filenames containing users, where '-' is stdin.")
+  parser.add_option("--id", action="store_true", dest="ids", default=False, help="Arguments are user id not user names.")
+  parser.add_option("--addusers", action="store_true", dest="addusers", default=False, help="Add all followers to tracked users.")
   parser.add_option("--greek", action="store_true", dest="greek", default=False, help="Only Greek ones.")
   parser.add_option("--common", action="store_true", dest="common", default=False, help="Only common to all given users.")
   parser.add_option("--before", action="store", dest="before", default=False, help="Before given date.")
@@ -162,6 +145,7 @@ if __name__ == '__main__':
   parser.add_option("--close", action="store_true", dest="close", default=False, help="List all edges between given set.")
   parser.add_option("--ego", action="store", dest="ego", type=int, default=0, help="Compute ego net at given depth.")
   parser.add_option("--csv", action="store", dest="csv", default=None, help="Save data per follower.")
+  parser.add_option("--dot", action="store", dest="dot", default=None, help="Save data as graph in given file.")
   (options, args) = parser.parse_args()
   verbose(options.verbose)
   db, api = init_state(use_cache=False, ignore_api=not options.addusers)
@@ -172,7 +156,10 @@ if __name__ == '__main__':
   if options.after:
     criteria['$gte'] = dateutil.parser.parse(options.after)
 
-  userlist = [x.lower().replace("@", "") for x in args]
+  if options.fromfile:
+    userlist = fileinput.input(args)
+  else:
+    userlist = [x.lower().replace("@", "") for x in args]
   common, total = get_userlist_followers(db, userlist, options, criteria)
   for d in range(options.ego):
     userlist = total
@@ -186,6 +173,7 @@ if __name__ == '__main__':
       print u'{}'.format(f)
   if options.close:
     g = fill_follow_graph(db, total)
-    save_dot(db, g, False)
+  if options.dot:
+    save_dot(db, g, options.dot)
   if options.csv:
     save_csv(db, total, options.csv)

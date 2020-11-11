@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -11,7 +11,6 @@ Mark the given user as suspended.
 
 import sys
 from pymongo import MongoClient
-from bson.json_util import loads
 from datetime import datetime
 from twkit.utils import *
 
@@ -23,7 +22,7 @@ if __name__ == "__main__":
     u = db.following.find_one( { 'screen_name_lower' : username } )
     if u != None:
       db.following.delete_one(u)
-      print "stopped following"
+      print("stopped following")
       sys.stdout.flush()
       userid = u['id']
     if userid == None:
@@ -31,22 +30,22 @@ if __name__ == "__main__":
       if u != None:
         userid = u['id']
       else:
-        print "could not find user locally"
+        print("could not find user locally")
         sys.stdout.flush()
     if userid == None: continue
     if is_dead(db, userid):
-      print "user dead, abort", userid, username
+      print("user dead, abort", userid, username)
       sys.stdout.flush()
       continue
     if is_ignored(db, userid):
-      print "already ignored", userid, username
+      print("already ignored", userid, username)
       sys.stdout.flush()
       continue
     try:
       db.suspended.insert_one({'id': userid})
-      print username, userid, "added to suspended set"
+      print(username, userid, "added to suspended set")
       sys.stdout.flush()
     except:
-      print "cannot insert suspended", userid, username
+      print("cannot insert suspended", userid, username)
       sys.stdout.flush()
       pass

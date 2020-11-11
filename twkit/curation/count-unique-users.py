@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -31,4 +31,4 @@ if __name__ == '__main__':
   #print totalusers, "user instances"
   #print len(cnt), "unique users"
   for u in uniqusers:
-    print u['_id'], u['count']
+    print(u['_id'], u['count'])

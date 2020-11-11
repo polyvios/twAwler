@@ -4,10 +4,44 @@
 #	https://apps.twitter.com/app/new
 #--------------------------------------------------------------------------------
 
+# connection tokens
 consumer_key = "get"
 consumer_secret = "these"
 access_token= "keys"
 access_token_secret = "from twitter"
 
+
+#--------------------------------------------------------------------------------
+# Configuration Parameters, set these and fine-tune depending on the
+# size of the crawled community.
+#--------------------------------------------------------------------------------
+
+# language to target
 lang='el'
-mongo='twitterdatabase'
+
+# name of mongo database
+mongo='twittergr'
+
+# how many days before rescanning a profile picture
+profilepic_expiration_days=30
+
+# How many days of data should the dashboard show for tweet volumes
+viz_tweet_series_days=10
+
+# how many days before forgetting/retrying protected status
+protected_expiration_days=60
+
+# how many days before forgetting/retrying suspended status
+suspended_expiration_days=60
+
+# how many days before rescanning user info
+user_expiration_days=30
+
+# how many days before rescanning 
+recent_scan_days=30
+
+# how many days before rescanning followers/friends
+follow_scan_days=100
+
+# how many days before rescraping (NOT API) favs of each tweet w wget
+scanfav_days=200

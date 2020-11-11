@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -25,7 +25,7 @@ if __name__ == '__main__':
   verbose(options.verbose)
   db, _ = init_state(ignore_api=True)
 
-  lists = [long(x) for x in args]
+  lists = [int(x) for x in args]
   if verbose():
     lists = Bar("Processing:", max=len(lists), suffix = '%(index)d/%(max)d - %(eta_td)s').iter(lists)
   for list_id in lists:
@@ -40,7 +40,7 @@ if __name__ == '__main__':
       seenmembers.add(uid)
       u = lookup_user(db, uid)
       if verbose():
-        print u"{} in {}".format(id_to_userstr(db, uid), l['uri']).encode('utf-8')
+        print(u"{} in {}".format(id_to_userstr(db, uid), l['uri']))
       else:
-        print u"{} {}".format(uid, list_id)
+        print(u"{} {}".format(uid, list_id))
 

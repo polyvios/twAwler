@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -25,32 +25,32 @@ def addfollowers(db, api, uid, force=False):
   """
   last = db.lastscan.find_one({'id': uid, 'action': 'followers'})
   now = datetime.utcnow()
-  if not force and last != None and last['date'] + timedelta(days=100) > now:
-    print "already scanned during last 100 days"
+  if not force and last != None and last['date'] + timedelta(days=config.follow_scan_days) > now:
+    print("already scanned during last {} days".format(config.follow_scan_days))
     return
   nextc = -1
   followers = [0]
   while len(followers):
     try:
       nextc, prevc, followers = api.GetFollowersPaged(user_id=uid, cursor=nextc, skip_status=True)
-      print u'.',
+      print(u'.', end='')
       sys.stdout.flush()
       for u in followers:
         db.follow.insert_one({'id': u.id, 'follows': uid, 'date': now})
         add_user(db, api, u)
     except twitter.TwitterError as e:
       if handle_twitter_error(db, api, e, uid, 'followers/list', None):
-        print u'got exception, retrying'
+        print(u'got exception, retrying')
         continue
       return
     except:
-      print u'other exception: {}'.format(sys.exc_info())
+      print(u'other exception: {}'.format(sys.exc_info()))
       return
   db.lastscan.update_one(
     {'id': uid, 'action': 'followers'},
     {'$set': {'date': now}},
     upsert=True)
-  print u'done'
+  print(u'done')
 
 
 def addfollowerids(db, api, uid, wait=False, addusers=False):
@@ -61,8 +61,8 @@ def addfollowerids(db, api, uid, wait=False, addusers=False):
   """
   last = db.lastscan.find_one({'id': uid, 'action': 'followers'})
   now = datetime.utcnow()
-  if last != None and last['date'] + timedelta(days=100) > now:
-    print "already scanned during last 100 days"
+  if last != None and last['date'] + timedelta(days=config.follow_scan_days) > now:
+    print("already scanned during last {} days".format(config.follow_scan_days))
     return
   try:
     cursor = api.GetFollowerIDs(user_id=uid)
@@ -72,7 +72,7 @@ def addfollowerids(db, api, uid, wait=False, addusers=False):
     return
   except:
     return
-  print u'got {}'.format(len(cursor)),
+  print(u'got {}'.format(len(cursor)), end='')
   sys.stdout.flush()
   for userid in cursor:
     db.follow.insert_one({'id': userid, 'follows': uid, 'date': now})
@@ -82,7 +82,7 @@ def addfollowerids(db, api, uid, wait=False, addusers=False):
     {'id': uid, 'action': 'followers'},
     {'$set': {'date': now}},
     upsert=True)
-  print u'done'
+  print(u'done')
 
 
 if __name__ == '__main__':
@@ -106,12 +106,17 @@ if __name__ == '__main__':
 
   for user in userlist:
     uname = None if options.ids else user
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     u = lookup_user(db, uid, uname)
-    print "Get {} followers".format(u.get('screen_name_lower', user)),
+    uid = u['id']
+    print("Get {} followers".format(u.get('screen_name_lower', user)), end='')
     sys.stdout.flush()
-    if is_ignored(db, u['id']) and not options.force:
-      print "skip ignored user", uname, uid
+    if is_ignored(db, uid) and not options.force:
+      print("skip ignored user", uname, uid)
+      continue
+    # omit users with very few tweets in the db
+    if u.get('statuses_count', 0) < 10 and u.get('followers_count', 0) < 10 and u.get('friends_count', 0) < 10:
+      print("skip inactive user {}/{}".format(uid, id_to_userstr(db,uid)))
       continue
     if options.full:
       addfollowers(db, api, u['id'], force = options.force)
