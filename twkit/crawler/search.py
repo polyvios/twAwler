@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -12,7 +12,6 @@ can be used to discover new users.
 """
 
 import sys
-import json
 import optparse
 from datetime import datetime
 from pymongo.errors import BulkWriteError,InvalidOperation

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -30,7 +30,7 @@ if __name__ == '__main__':
   userlist = [x.lower().replace("@", "") for x in args]
 
   for user in userlist:
-    uid = long(user) if options.ids else None
+    uid = int(user) if options.ids else None
     username = None if options.ids else user
     for tw in api.GetFavorites(user_id=uid, screen_name=username, count=200):
       j = pack_tweet(db, tw)
