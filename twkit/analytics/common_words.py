@@ -1,7 +1,7 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2018 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -45,4 +45,4 @@ if __name__ == '__main__':
     #word_count += Counter({d['word']: d['count'] for d in vect.get('most_common_words')})
 
   for w in sorted(word_count):
-    print u'{}\t{}'.format(word_count[w], w)encode('utf-8')
+    print(u'{}\t{}'.format(word_count[w], w)encode('utf-8'))
