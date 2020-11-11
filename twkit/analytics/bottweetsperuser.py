@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 ###########################################
-# (c) 2016-2017 Polyvios Pratikakis
+# (c) 2016-2020 Polyvios Pratikakis
 # polyvios@ics.forth.gr
 ###########################################
 
@@ -13,7 +13,6 @@ import optparse
 import itertools
 from collections import Counter, defaultdict
 from datetime import datetime,timedelta
-from pprint import pprint
 from progress.bar import Bar
 from twkit.utils import init_state, lookup_user, is_greek, is_ignored, get_tracked, is_suspended, id_to_userstr
 
