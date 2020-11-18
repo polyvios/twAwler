@@ -65,7 +65,7 @@ def dumpall(db, api, uid, uname, max_req=-1):
       if s.id == last:
         break
       count += 1
-      if newlast < s.id:
+      if newslast is None or newlast < s.id:
         newlast = s.id
       if s.lang == config.lang: flag = True
       j = pack_tweet(db, s)
